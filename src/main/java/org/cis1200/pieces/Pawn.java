@@ -1,11 +1,11 @@
-package pieces;
+package org.cis1200.pieces;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import util.Piece;
-import util.Piece.Color;
-import util.Position;
+import org.cis1200.util.Piece;
+import org.cis1200.util.Piece.Color;
+import org.cis1200.util.Position;
 
 public class Pawn extends Piece {
     public Pawn(Color color, int x, int y) {

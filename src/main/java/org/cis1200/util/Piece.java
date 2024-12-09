@@ -1,7 +1,8 @@
-package util;
+package org.cis1200.util;
 import java.util.List;
 import java.util.Map;
 
+import org.cis1200.Board;
 public abstract class Piece {
     public static enum Type {
         PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING
@@ -25,17 +26,20 @@ public abstract class Piece {
     private int x;
     private int y;
     private int[][] moveDirections;
+    private Board board;
 
-    public Piece(Type type, Color color, int x, int y) {
+    public Piece(Type type, Color color, int x, int y, Board board) {
         this.type = type;
         this.color = color;
         this.active = true;
         this.x = x;
         this.y = y;
+        this.board = board;
     }
 
-    public Piece(Type type, Color color, Position position) {
-        this(type, color, position.getX(), position.getY());
+    public Piece(Type type, Color color, int[] position, Board board)
+    {
+        this(type, color, position[0], position[1], board);
     }
 
     //getters
@@ -78,32 +82,39 @@ public abstract class Piece {
     /**
      * @return the position of the piece
      */
-    public Position getPosition() {
-        return new Position(this.x, this.y);
+    public int[] getPosition() {
+        return new int[] {this.x, this.y};
     }
       
     /**
      * @return the possible moves of the piece
      */
-    public abstract List<Position> getPossibleMoves();
+    public abstract List<int[]> getPossibleMoves();
+
+    public Board getBoard() {
+        return this.board;
+    }
     
     //setters
-
-    /**
-     * moves the piece to the given position
-     */
-    public void move(int x, int y) {
-        if (this.isValidMove(x, y)) {
-            this.x = x;
-            this.y = y;
-        }
-    }
 
     /**
      * sets the active status of the piece
      */
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    /**
+     * sets the position of the piece
+     */
+    public void setPosition(int[] position) {
+        this.x = position[0];
+        this.y = position[1];
+    }
+
+    public void setPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
     }
     
     //checkers
@@ -112,7 +123,7 @@ public abstract class Piece {
      * @return whether the move to the new position is valid
      */
     public boolean isValidMove(int newX, int newY) {
-        return this.getPossibleMoves().contains(new Position(newX, newY));
+        return this.getPossibleMoves().contains(new int[] {newX, newY});
     }
         
 }
