@@ -18,7 +18,7 @@ public class RunChess implements Runnable {
         // Status panel
         final JPanel status_panel = new JPanel();
         frame.add(status_panel, BorderLayout.SOUTH);
-        final JLabel status = new JLabel("White's Turn");
+        final JLabel status = new JLabel("Enjoy the game!");
         status_panel.add(status);
 
         // Game board
