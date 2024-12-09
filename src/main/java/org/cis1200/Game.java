@@ -1,6 +1,6 @@
 package org.cis1200;
 
-import javax.swing.*;
+import javax.swing.SwingUtilities;
 
 public class Game {
     /**
@@ -10,7 +10,7 @@ public class Game {
      */
     public static void main(String[] args) {
         // Set the game you want to run here
-        Runnable game = new org.cis1200.tictactoe.RunTicTacToe();
+        Runnable game = new RunChess();
 
         SwingUtilities.invokeLater(game);
     }

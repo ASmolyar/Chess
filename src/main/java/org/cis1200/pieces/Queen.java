@@ -21,9 +21,7 @@ public class Queen extends Piece {
      * @return A list of all possible positions for the queen to move to.
      */
     @Override
-    public List<int[]> getPossibleMoves() {
-
-        //initialize list which contains all possible moves not considering check
+    public List<int[]> getSimpleMoves() {
         List<int[]> range = new ArrayList<>();
 
         //iterate through all possible move directions
@@ -58,10 +56,13 @@ public class Queen extends Piece {
                 currentPos = newPos;
             }
         }
-
-        //check which moves don't leave king in check
-        range = Board.filterChecklessMoves(this, range);
         return range;
+    }
+
+    @Override
+    public List<int[]> getLegalMoves() {
+        List<int[]> moves = getSimpleMoves();
+        return Board.filterChecklessMoves(this, moves);
     }
     
 }

@@ -81,9 +81,17 @@ public abstract class Piece {
     }
       
     /**
-     * @return the possible moves of the piece
+     * Returns a list of all possible moves for the piece without checking if they leave the king in check.
+     * Used internally to prevent infinite recursion when checking for check.
+     * @return A list of all possible positions for the piece to move to.
      */
-    public abstract List<int[]> getPossibleMoves();
+    public abstract List<int[]> getSimpleMoves();
+
+    /**
+     * Returns a list of all legal moves for the piece, including checking if they leave the king in check.
+     * @return A list of all possible positions for the piece to move to.
+     */
+    public abstract List<int[]> getLegalMoves();
 
     public Board getBoard() {
         return this.board;
@@ -117,7 +125,7 @@ public abstract class Piece {
      * @return whether the move to the new position is valid
      */
     public boolean isValidMove(int newX, int newY) {
-        return this.getPossibleMoves().contains(new int[] {newX, newY});
+        return this.getLegalMoves().contains(new int[] {newX, newY});
     }
         
 }

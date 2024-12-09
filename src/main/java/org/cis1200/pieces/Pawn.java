@@ -12,7 +12,7 @@ public class Pawn extends Piece {
     }
 
     @Override
-    public List<int[]> getPossibleMoves() {
+    public List<int[]> getSimpleMoves() {
         List<int[]> range = new ArrayList<>();
         int[] enPassantTarget = this.getBoard().getEnPassantTarget();
 
@@ -66,8 +66,12 @@ public class Pawn extends Piece {
             }
         }
 
-        //check which moves don't leave king in check
-        range = Board.filterChecklessMoves(this, range);
         return range;
+    }
+
+    @Override
+    public List<int[]> getLegalMoves() {
+        List<int[]> moves = getSimpleMoves();
+        return Board.filterChecklessMoves(this, moves);
     }
 }

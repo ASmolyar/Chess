@@ -14,9 +14,9 @@ import org.cis1200.pieces.Queen;
 import org.cis1200.pieces.Rook;
 import org.cis1200.util.Piece;
 public class Board {
-    private Piece[][] board;
+    private final Piece[][] board;
 
-    private static final String startingPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    private static final String STARTING_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     private Piece.Color toMove;
 
@@ -30,15 +30,18 @@ public class Board {
     private boolean whiteKingsideCastle;
     private boolean whiteQueensideCastle;
 
-    private List<Piece> whitePieces;
-    private List<Piece> blackPieces;
+    // Lists of pieces
+    private final List<Piece> whitePieces;
+    private final List<Piece> blackPieces;
 
     // En passant target coord
     private int[] enPassantTarget;
 
-    private List<String> moveHistory;
+    // Lists of moves for display purposes
+    private final List<String> moveHistory;
 
-    private List<String> positionHistory;
+    // Lists of positions for tracking repetition
+    private final List<String> positionHistory;
 
     /**
      * Creates a new empty board.
@@ -59,7 +62,6 @@ public class Board {
         this.positionHistory = new ArrayList<>();
     }
 
-
     /**
      * Creates a new board with a custom board state.
      */
@@ -75,7 +77,7 @@ public class Board {
         this.whiteKingsideCastle = whiteKingsideCastle;
         this.whiteQueensideCastle = whiteQueensideCastle;
         this.enPassantTarget = enPassantTarget;
-        
+
         // Initialize piece arrays
         this.whitePieces = new ArrayList<>();
         this.blackPieces = new ArrayList<>();
@@ -126,7 +128,7 @@ public class Board {
         piece.setPosition(newPos);
         return this;
     }
-    
+
     /**
      * Given a piece and a list of moves, returns a list of moves that don't leave the king in check.
      * @param piece the piece to check
@@ -179,9 +181,9 @@ public class Board {
         }
 
         // Handle en passant capture
-        if (piece.getType() == Piece.Type.PAWN && 
-            newPos[1] != oldPos[1] && // diagonal move
-            getPiece(newPos) == null) { // no piece at target square
+        if (piece.getType() == Piece.Type.PAWN &&
+                newPos[1] != oldPos[1] && // diagonal move
+                getPiece(newPos) == null) { // no piece at target square
             // Remove captured pawn
             int capturedPawnRank = oldPos[0];
             Piece capturedPawn = getPiece(new int[] { capturedPawnRank, newPos[1] });
@@ -223,7 +225,7 @@ public class Board {
      * @return true if the move is valid
      */
     public boolean isValidMove(Piece piece, int[] newPos) {
-        List<int[]> validMoves = piece.getPossibleMoves();
+        List<int[]> validMoves = piece.getLegalMoves();
         for (int[] move : validMoves) {
             if (move[0] == newPos[0] && move[1] == newPos[1]) {
                 return true;
@@ -232,7 +234,6 @@ public class Board {
         return false;
     }
 
-
     /**
      * Gets the castling rights.
      * @return an array of booleans representing the castling rights in the order white kingside, white queenside, black kingside, black queenside
@@ -240,14 +241,14 @@ public class Board {
     public boolean[] getCastlingRights() {
         return new boolean[] { whiteKingsideCastle, whiteQueensideCastle, blackKingsideCastle, blackQueensideCastle };
     }
-    
+
     public void setWhiteKingsideCastle(boolean whiteKingsideCastle) {
         this.whiteKingsideCastle = whiteKingsideCastle;
     }
 
     public void setWhiteQueensideCastle(boolean whiteQueensideCastle) {
         this.whiteQueensideCastle = whiteQueensideCastle;
-    }   
+    }
 
     public void setBlackKingsideCastle(boolean blackKingsideCastle) {
         this.blackKingsideCastle = blackKingsideCastle;
@@ -304,10 +305,10 @@ public class Board {
                     }
                     count++;
                 }
-                if (count != 8) {
-                    System.out.println("FEN has incorrect number of pieces in a row (" + count + " instead of 8)");
-                    return false;
-                }
+            }
+            if (count != 8) {
+                System.out.println("FEN has incorrect number of pieces in a row (row " + i + " has " + count + " instead of 8)");
+                return false;
             }
         }
 
@@ -323,7 +324,22 @@ public class Board {
         String castleStatement = parts[2];
 
         //general character check
-        if (!castleStatement.equals("-") && !castleStatement.matches("^[KQkq]{1,4}$")) {
+        if (!castleStatement.equals("-") &&
+            !castleStatement.equals("K") &&
+            !castleStatement.equals("Q") &&
+            !castleStatement.equals("k") &&
+            !castleStatement.equals("q") &&
+            !castleStatement.equals("KQ") &&
+            !castleStatement.equals("Kk") &&
+            !castleStatement.equals("Qk") &&
+            !castleStatement.equals("Kq") &&
+            !castleStatement.equals("kq") &&
+            !castleStatement.equals("Qq") &&
+            !castleStatement.equals("KQk") &&
+            !castleStatement.equals("KQq") &&
+            !castleStatement.equals("Kkq") &&
+            !castleStatement.equals("Qkq") &&
+            !castleStatement.equals("KQkq")) {
             System.out.println("FEN has invalid castling availability (" + castleStatement + ")");
             return false;
         }
@@ -350,20 +366,16 @@ public class Board {
                         "FEN has a castling contradiction for black queen side castle (rook is not in the correct position)");
                 return false;
             }
-
-            //check that the king is in the correct position
-            int kingPosition = 0;
-
-            for (int i = 0; i < homeBase.length; i++) {
-                char current = homeBase[i];
-                if (Character.isDigit(current)) {
-                    kingPosition += Character.getNumericValue(current);
+            int homeBaseSize = 0;
+            for (char c : homeBase) {
+                if (Character.isDigit(c)) {
+                    homeBaseSize += Character.getNumericValue(c);
                 } else {
-                    kingPosition++;
+                    homeBaseSize++;
                 }
-            }
-
-            if (kingPosition != 5) {
+            }   
+            //check that the king is in the correct position
+            if (homeBaseSize != 4) {
                 System.out.println(
                         "FEN has a castling contradiction for black queen side castle (king is not in the correct position)");
                 return false;
@@ -382,7 +394,7 @@ public class Board {
             }
 
             //isolate relevant characters (reversed since the black king side rook is on the right)
-            char[] homeBase = new StringBuilder(homeBaseString.split("k")[0]).reverse().toString().toCharArray();
+            char[] homeBase = new StringBuilder(homeBaseString).reverse().toString().split("k")[0].toCharArray();
 
             //check that the rook is in the correct position
             if (homeBase[0] != 'r') {
@@ -390,20 +402,16 @@ public class Board {
                         "FEN has a castling contradiction for black king side castle (rook is not in the correct position)");
                 return false;
             }
-
-            //check that the king is in the correct position
-            int kingPosition = 0;
-
-            for (int i = 0; i < homeBase.length; i++) {
-                char current = homeBase[i];
-                if (Character.isDigit(current)) {
-                    kingPosition += Character.getNumericValue(current);
+            int homeBaseSize = 0;
+            for (char c : homeBase) {
+                if (Character.isDigit(c)) {
+                    homeBaseSize += Character.getNumericValue(c);
                 } else {
-                    kingPosition++;
+                    homeBaseSize++;
                 }
             }
-
-            if (kingPosition != 4) {
+            //check that the king is in the correct position
+            if (homeBaseSize != 3) {
                 System.out.println(
                         "FEN has a castling contradiction for black king side castle (king is not in the correct position)");
                 return false;
@@ -430,20 +438,16 @@ public class Board {
                         "FEN has a castling contradiction for white queen side castle (rook is not in the correct position)");
                 return false;
             }
-
-            //check that the king is in the correct position
-            int kingPosition = 0;
-
-            for (int i = 0; i < homeBase.length; i++) {
-                char current = homeBase[i];
-                if (Character.isDigit(current)) {
-                    kingPosition += Character.getNumericValue(current);
+            int homeBaseSize = 0;
+            for (char c : homeBase) {
+                if (Character.isDigit(c)) {
+                    homeBaseSize += Character.getNumericValue(c);
                 } else {
-                    kingPosition++;
+                    homeBaseSize++;
                 }
             }
-
-            if (kingPosition != 5) {
+            //check that the king is in the correct position
+            if (homeBaseSize != 4) {
                 System.out.println(
                         "FEN has a castling contradiction for white queen side castle (king is not in the correct position)");
                 return false;
@@ -462,7 +466,7 @@ public class Board {
             }
 
             //isolate relevant characters (reversed since the white king side rook is on the right)
-            char[] homeBase = new StringBuilder(homeBaseString.split("K")[0]).reverse().toString().toCharArray();
+            char[] homeBase = new StringBuilder(homeBaseString).reverse().toString().split("K")[0].toCharArray();
 
             //check that the rook is in the correct position
             if (homeBase[0] != 'R') {
@@ -470,20 +474,16 @@ public class Board {
                         "FEN has a castling contradiction for white king side castle (rook is not in the correct position)");
                 return false;
             }
-
-            //check that the king is in the correct position
-            int kingPosition = 0;
-
-            for (int i = 0; i < homeBase.length; i++) {
-                char current = homeBase[i];
-                if (Character.isDigit(current)) {
-                    kingPosition += Character.getNumericValue(current);
+            int homeBaseSize = 0;
+            for (char c : homeBase) {
+                if (Character.isDigit(c)) {
+                    homeBaseSize += Character.getNumericValue(c);
                 } else {
-                    kingPosition++;
+                    homeBaseSize++;
                 }
             }
-
-            if (kingPosition != 4) {
+            //check that the king is in the correct position
+            if (homeBaseSize != 3) {
                 System.out.println(
                         "FEN has a castling contradiction for white king side castle (king is not in the correct position)");
                 return false;
@@ -504,24 +504,16 @@ public class Board {
 
             // Convert algebraic notation to array indices
             int file = enPassantTarget.charAt(0) - 'a';
-            int rank = 8 - Character.getNumericValue(enPassantTarget.charAt(1));
+            int rank = Character.getNumericValue(enPassantTarget.charAt(1));
+            
+            // Check if there's a pawn of the correct color in the right position
+            int pawnRank = rank + (rank == 5 ? -1 : 1); // For f3 (rank=5), check rank 4; for f6 (rank=2), check rank 3
 
-            // Check if it's on the correct rank (3rd rank for white pawn, 6th rank for black pawn)
-            if (rank != 2 && rank != 5) {
-                System.out.println("FEN has invalid en passant target square (must be on 3rd or 6th rank)");
-                return false;
-            }
-
-            // Check if it's the correct player's turn
-            String colorToMove = parts[1];
-            if ((rank == 2 && colorToMove.equals("w")) || (rank == 5 && colorToMove.equals("b"))) {
-                System.out.println("FEN has invalid en passant target (wrong player to move)");
-                return false;
-            }
-
-            // Check if there's a pawn of the correct color one step closer to the center
-            int pawnRank = rank + (rank == 2 ? -1 : 1); // One rank closer to center
             String pawnRow = rows[pawnRank];
+
+            // Debug print to see what's happening
+            System.out.println("Checking for pawn at rank " + pawnRank + " file " + file);
+            System.out.println("Row contents: " + pawnRow);
 
             // Find the piece at the target file position
             int currentFile = 0;
@@ -547,12 +539,12 @@ public class Board {
             }
 
             // Check if there's a pawn of the correct color
-            char expectedPawn = rank == 2 ? 'P' : 'p'; // White pawn for 3rd rank, black pawn for 6th
+            char expectedPawn = rank == 2 ? 'p' : 'P'; // Black pawn for 3rd rank, white pawn for 6th
             if (pieceAtFile != expectedPawn) {
                 System.out.println("FEN has invalid en passant target square (no pawn in correct position)");
+                System.out.println("Expected " + expectedPawn + " but found " + pieceAtFile);
                 return false;
             }
-
         }
 
         //SECTION 5: Check that the halfmove clock is valid
@@ -598,7 +590,8 @@ public class Board {
         }
 
         if (halfMoveClock > maxHalfMoveClock) {
-            System.out.println("FEN has invalid halfmove clock (exceeds maximum possible value for given fullmove number)");
+            System.out.println(
+                    "FEN has invalid halfmove clock (exceeds maximum possible value for given fullmove number)");
             return false;
         }
 
@@ -612,7 +605,7 @@ public class Board {
      * @throws IllegalArgumentException if the FEN string is invalid.
      */
     public static Board FENtoBoard(String fen) {
-        
+
         if (!isValidFEN(fen)) {
             throw new IllegalArgumentException("Invalid FEN string");
         }
@@ -636,7 +629,8 @@ public class Board {
         int halfMoveClock = Integer.parseInt(halfMoveClockString);
         int fullMoveNumber = Integer.parseInt(fullMoveNumberString);
 
-        Board board = new Board(colorToMove, halfMoveClock, fullMoveNumber, blackKingsideCastle, blackQueensideCastle, whiteKingsideCastle, whiteQueensideCastle, enPassantTarget);
+        Board board = new Board(colorToMove, halfMoveClock, fullMoveNumber, blackKingsideCastle, blackQueensideCastle,
+                whiteKingsideCastle, whiteQueensideCastle, enPassantTarget);
 
         // Parse the board string
         String[] rows = boardString.split("/");
@@ -649,13 +643,19 @@ public class Board {
                 } else {
                     Piece.Color color = Character.isUpperCase(c) ? Piece.Color.WHITE : Piece.Color.BLACK;
                     String cLower = String.valueOf(c).toLowerCase();
-                    switch (cLower) {    
-                        case "p" -> board.addPiece(new Pawn(color, new int[] { i, file }, board), new int[] { i, file });
-                        case "n" -> board.addPiece(new Knight(color, new int[] { i, file }, board), new int[] { i, file });
-                        case "b" -> board.addPiece(new Bishop(color, new int[] { i, file }, board), new int[] { i, file });
-                        case "r" -> board.addPiece(new Rook(color, new int[] { i, file }, board), new int[] { i, file });
-                        case "q" -> board.addPiece(new Queen(color, new int[] { i, file }, board), new int[] { i, file });
-                        case "k" -> board.addPiece(new King(color, new int[] { i, file }, board), new int[] { i, file });
+                    switch (cLower) {
+                        case "p" ->
+                            board.addPiece(new Pawn(color, new int[] { i, file }, board), new int[] { i, file });
+                        case "n" ->
+                            board.addPiece(new Knight(color, new int[] { i, file }, board), new int[] { i, file });
+                        case "b" ->
+                            board.addPiece(new Bishop(color, new int[] { i, file }, board), new int[] { i, file });
+                        case "r" ->
+                            board.addPiece(new Rook(color, new int[] { i, file }, board), new int[] { i, file });
+                        case "q" ->
+                            board.addPiece(new Queen(color, new int[] { i, file }, board), new int[] { i, file });
+                        case "k" ->
+                            board.addPiece(new King(color, new int[] { i, file }, board), new int[] { i, file });
                     }
                     file++;
                 }
@@ -677,21 +677,22 @@ public class Board {
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 Piece piece = board[i][j];
-                if (piece != null && 
-                    piece.getType() == Piece.Type.KING && 
-                    piece.getColor() == color) {
-                    kingPos = new int[] {i, j};
+                if (piece != null &&
+                        piece.getType() == Piece.Type.KING &&
+                        piece.getColor() == color) {
+                    kingPos = new int[] { i, j };
                     break;
                 }
             }
-            if (kingPos != null) break;
+            if (kingPos != null)
+                break;
         }
 
         // Check if any opponent piece can capture the king
         if (color == Piece.Color.WHITE) {
-            for (Piece piece: blackPieces) {
+            for (Piece piece : blackPieces) {
                 if (piece != null && piece.isActive() && piece.getColor() != color) {
-                    List<int[]> moves = piece.getPossibleMoves();
+                    List<int[]> moves = piece.getSimpleMoves();
                     for (int[] move : moves) {
                         if (move[0] == kingPos[0] && move[1] == kingPos[1]) {
                             return true;
@@ -700,9 +701,9 @@ public class Board {
                 }
             }
         } else {
-            for (Piece piece: whitePieces) {
+            for (Piece piece : whitePieces) {
                 if (piece != null && piece.isActive() && piece.getColor() != color) {
-                    List<int[]> moves = piece.getPossibleMoves();
+                    List<int[]> moves = piece.getSimpleMoves();
                     for (int[] move : moves) {
                         if (move[0] == kingPos[0] && move[1] == kingPos[1]) {
                             return true;
@@ -711,7 +712,7 @@ public class Board {
                 }
             }
         }
-        
+
         return false;
     }
 
@@ -722,6 +723,7 @@ public class Board {
     public int[] getEnPassantTarget() {
         return enPassantTarget != null ? Arrays.copyOf(enPassantTarget, 2) : null;
     }
+
     /**
      * Creates a deep copy of the board, including all pieces and game state.
      * @return A new Board instance with the same state
@@ -737,12 +739,12 @@ public class Board {
                 if (piece != null) {
                     // Create new piece of same type and color
                     Piece newPiece = switch (piece.getType()) {
-                        case PAWN -> new Pawn(piece.getColor(), new int[] {i, j}, newBoard);
-                        case KNIGHT -> new Knight(piece.getColor(), new int[] {i, j}, newBoard);
-                        case BISHOP -> new Bishop(piece.getColor(), new int[] {i, j}, newBoard);
-                        case ROOK -> new Rook(piece.getColor(), new int[] {i, j}, newBoard);
-                        case QUEEN -> new Queen(piece.getColor(), new int[] {i, j}, newBoard);
-                        case KING -> new King(piece.getColor(), new int[] {i, j}, newBoard);
+                        case PAWN -> new Pawn(piece.getColor(), new int[] { i, j }, newBoard);
+                        case KNIGHT -> new Knight(piece.getColor(), new int[] { i, j }, newBoard);
+                        case BISHOP -> new Bishop(piece.getColor(), new int[] { i, j }, newBoard);
+                        case ROOK -> new Rook(piece.getColor(), new int[] { i, j }, newBoard);
+                        case QUEEN -> new Queen(piece.getColor(), new int[] { i, j }, newBoard);
+                        case KING -> new King(piece.getColor(), new int[] { i, j }, newBoard);
                     };
                     newBoard.addPiece(newPiece, new int[] { i, j });
                 }
@@ -750,19 +752,18 @@ public class Board {
         }
         return newBoard;
     }
-    
 
     /**
      * Gets the possible moves for all pieces of the given color.
      * @param color the color of the pieces to get moves for
      * @return a map of pieces to their possible moves
      */
-    public Map<Piece, List<int[]>> getPossibleMoves(Piece.Color color) {
+    public Map<Piece, List<int[]>> getLegalMoves(Piece.Color color) {
         Map<Piece, List<int[]>> moves = new TreeMap<>();
         List<Piece> pieces = color == Piece.Color.WHITE ? whitePieces : blackPieces;
         for (Piece piece : pieces) {
             if (piece.isActive()) {
-                List<int[]> currentMoves = piece.getPossibleMoves();
+                List<int[]> currentMoves = piece.getLegalMoves();
                 if (!currentMoves.isEmpty()) {
                     moves.put(piece, currentMoves);
                 }
@@ -777,7 +778,7 @@ public class Board {
      * @return true if the color is in checkmate
      */
     public boolean isCheckmate(Piece.Color color) {
-        return isInCheck(color) && getPossibleMoves(color).isEmpty();
+        return isInCheck(color) && getLegalMoves(color).isEmpty();
     }
 
     /**
@@ -786,7 +787,7 @@ public class Board {
      * @return true if the color is in stalemate
      */
     public boolean isStalemate(Piece.Color color) {
-        return !isInCheck(color) && getPossibleMoves(color).isEmpty();
+        return !isInCheck(color) && getLegalMoves(color).isEmpty();
     }
 
     public boolean is50MoveRule() {
@@ -822,35 +823,34 @@ public class Board {
      */
     public void updateGameState(Piece piece, int[] oldPos, int[] newPos) {
         // Determine if move is a capture
-        boolean isCapture = getPiece(newPos) != null || 
-                           (piece.getType() == Piece.Type.PAWN && oldPos[1] != newPos[1]);
-        
+        boolean isCapture = getPiece(newPos) != null ||
+                (piece.getType() == Piece.Type.PAWN && oldPos[1] != newPos[1]);
+
         // Make the move
         Piece capturedPiece = getPiece(newPos);
         if (capturedPiece != null) {
             capturedPiece.setActive(false);
         }
-        
+
         // Store old state
-        Piece.Color oppositeColor = (piece.getColor() == Piece.Color.WHITE) ? 
-                                   Piece.Color.BLACK : Piece.Color.WHITE;
-        
+        Piece.Color oppositeColor = (piece.getColor() == Piece.Color.WHITE) ? Piece.Color.BLACK : Piece.Color.WHITE;
+
         // Make temporary move to check for check/checkmate
         Board tempBoard = this.copy();
         tempBoard.tryMove(oldPos, newPos);
         boolean causesCheck = tempBoard.isInCheck(oppositeColor);
         boolean causesCheckmate = tempBoard.isCheckmate(oppositeColor);
-        
+
         // Record the move
         recordMove(piece, oldPos, newPos, isCapture, causesCheck, causesCheckmate);
-        
+
         // Update move counters
         if (piece.getType() == Piece.Type.PAWN || isCapture) {
             halfMoveClock = 0;
         } else {
             halfMoveClock++;
         }
-        
+
         if (toMove == Piece.Color.BLACK) {
             fullMoveNumber++;
         }
@@ -866,24 +866,28 @@ public class Board {
             }
         } else if (piece.getType() == Piece.Type.ROOK) {
             if (oldPos[1] == 0) { // White's back rank
-                if (oldPos[0] == 0) whiteQueensideCastle = false;
-                if (oldPos[0] == 7) whiteKingsideCastle = false;
+                if (oldPos[0] == 0)
+                    whiteQueensideCastle = false;
+                if (oldPos[0] == 7)
+                    whiteKingsideCastle = false;
             } else if (oldPos[1] == 7) { // Black's back rank
-                if (oldPos[0] == 0) blackQueensideCastle = false;
-                if (oldPos[0] == 7) blackKingsideCastle = false;
+                if (oldPos[0] == 0)
+                    blackQueensideCastle = false;
+                if (oldPos[0] == 7)
+                    blackKingsideCastle = false;
             }
         }
 
         // Update en passant target
         if (piece.getType() == Piece.Type.PAWN && Math.abs(newPos[1] - oldPos[1]) == 2) {
-            enPassantTarget = new int[] {(oldPos[1] + newPos[1])/2, oldPos[0]};
+            enPassantTarget = new int[] { (oldPos[1] + newPos[1]) / 2, oldPos[0] };
         } else {
             enPassantTarget = null;
         }
 
         // Switch turns
         toMove = (toMove == Piece.Color.WHITE) ? Piece.Color.BLACK : Piece.Color.WHITE;
-        
+
         // Record the position after the move
         positionHistory.add(getCurrentPosition());
     }
@@ -899,7 +903,7 @@ public class Board {
                 whitePieceCount++;
             }
         }
-        
+
         int blackPieceCount = 0;
         for (Piece p : blackPieces) {
             if (p.isActive()) {
@@ -913,8 +917,8 @@ public class Board {
         }
 
         // King and Bishop/Knight vs King
-        if ((whitePieceCount == 2 && blackPieceCount == 1) || 
-            (whitePieceCount == 1 && blackPieceCount == 2)) {
+        if ((whitePieceCount == 2 && blackPieceCount == 1) ||
+                (whitePieceCount == 1 && blackPieceCount == 2)) {
             for (Piece p : whitePieces) {
                 if (p.isActive() && (p.getType() == Piece.Type.BISHOP || p.getType() == Piece.Type.KNIGHT)) {
                     return true;
@@ -938,10 +942,10 @@ public class Board {
         if (positionHistory.size() < 5) { // Need at least 5 moves for 3 repetitions
             return false;
         }
-        
+
         String currentPos = positionHistory.get(positionHistory.size() - 1);
         int repetitions = 0;
-        
+
         // Count occurrences of current position in history
         for (String pos : positionHistory) {
             if (pos.equals(currentPos)) {
@@ -951,7 +955,7 @@ public class Board {
                 }
             }
         }
-        
+
         return false;
     }
 
@@ -959,17 +963,17 @@ public class Board {
      * Checks if the game is over
      */
     public boolean isGameOver() {
-        return isCheckmate(toMove) || isStalemate(toMove) || 
-               is50MoveRule() || isInsufficientMaterial() || 
-               isThreefoldRepetition();
+        return isCheckmate(toMove) || isStalemate(toMove) ||
+                is50MoveRule() || isInsufficientMaterial() ||
+                isThreefoldRepetition();
     }
 
     /**
      * Converts a position array to algebraic notation (e.g. [0,0] -> "a1")
      */
     private String positionToAlgebraic(int[] pos) {
-        char file = (char) ('a' + pos[1]);  // Convert column to letter
-        int rank = pos[0] + 1;              // Convert row to number
+        char file = (char) ('a' + pos[1]); // Convert column to letter
+        int rank = pos[0] + 1; // Convert row to number
         return "" + file + rank;
     }
 
@@ -982,10 +986,10 @@ public class Board {
      * @param isCheck Whether the move puts opponent in check
      * @param isCheckmate Whether the move is checkmate
      */
-    private void recordMove(Piece piece, int[] oldPos, int[] newPos, boolean isCapture, 
-                           boolean isCheck, boolean isCheckmate) {
+    private void recordMove(Piece piece, int[] oldPos, int[] newPos, boolean isCapture,
+            boolean isCheck, boolean isCheckmate) {
         StringBuilder moveNotation = new StringBuilder();
-        
+
         // Add piece letter (except for pawns)
         if (piece.getType() != Piece.Type.PAWN) {
             moveNotation.append(switch (piece.getType()) {
@@ -997,7 +1001,7 @@ public class Board {
                 default -> "";
             });
         }
-        
+
         // Handle castling
         if (piece.getType() == Piece.Type.KING && Math.abs(newPos[1] - oldPos[1]) == 2) {
             moveNotation = new StringBuilder(newPos[1] > oldPos[1] ? "O-O" : "O-O-O");
@@ -1009,18 +1013,18 @@ public class Board {
                 }
                 moveNotation.append("x");
             }
-            
+
             // Add destination square
             moveNotation.append(positionToAlgebraic(newPos));
         }
-        
+
         // Add check/checkmate notation
         if (isCheckmate) {
             moveNotation.append("#");
         } else if (isCheck) {
             moveNotation.append("+");
         }
-        
+
         moveHistory.add(moveNotation.toString());
     }
 
@@ -1035,11 +1039,11 @@ public class Board {
     /**
      * Converts the current board state to FEN notation
      */
-    private String boardToFEN() {
+    public String boardToFEN() {
         StringBuilder fen = new StringBuilder();
-        
+
         // Add piece positions
-        for (int i = 7; i >= 0; i--) {  // Start from rank 8
+        for (int i = 0; i < 8; i++) { // Start from rank 8 (index 0) to rank 1 (index 7)
             int emptyCount = 0;
             for (int j = 0; j < 8; j++) {
                 Piece piece = board[i][j];
@@ -1058,30 +1062,38 @@ public class Board {
                         case QUEEN -> 'q';
                         case KING -> 'k';
                     };
-                    fen.append(piece.getColor() == Piece.Color.WHITE ? 
-                        Character.toUpperCase(pieceChar) : pieceChar);
+                    fen.append(piece.getColor() == Piece.Color.WHITE ? Character.toUpperCase(pieceChar) : pieceChar);
                 }
             }
             if (emptyCount > 0) {
                 fen.append(emptyCount);
             }
-            if (i > 0) fen.append('/');
+            if (i < 7)
+                fen.append('/');
         }
-        
+
         // Add color to move
         fen.append(' ').append(toMove == Piece.Color.WHITE ? 'w' : 'b');
-        
+
         // Add castling rights
         fen.append(' ');
-        if (whiteKingsideCastle) fen.append('K');
-        if (whiteQueensideCastle) fen.append('Q');
-        if (blackKingsideCastle) fen.append('k');
-        if (blackQueensideCastle) fen.append('q');
-        if (!whiteKingsideCastle && !whiteQueensideCastle && 
-            !blackKingsideCastle && !blackQueensideCastle) {
+        if (whiteKingsideCastle) {
+            fen.append('K');
+        }
+        if (whiteQueensideCastle) {
+            fen.append('Q');
+        }
+        if (blackKingsideCastle) {
+            fen.append('k');
+        }
+        if (blackQueensideCastle) {
+            fen.append('q');
+        }
+        if (!whiteKingsideCastle && !whiteQueensideCastle &&
+                !blackKingsideCastle && !blackQueensideCastle) {
             fen.append('-');
         }
-        
+
         // Add en passant target
         fen.append(' ');
         if (enPassantTarget != null) {
@@ -1089,11 +1101,11 @@ public class Board {
         } else {
             fen.append('-');
         }
-        
+
         // Add move counters
         fen.append(' ').append(halfMoveClock);
         fen.append(' ').append(fullMoveNumber);
-        
+
         return fen.toString();
     }
 
@@ -1106,4 +1118,10 @@ public class Board {
         // Return everything before the move counters (last two fields)
         return fen.substring(0, fen.lastIndexOf(' ', fen.lastIndexOf(' ') - 1));
     }
+
+    public static Board starterBoard() {
+        Board board = FENtoBoard(STARTING_POSITION);
+        return board;
+    }
 }
+

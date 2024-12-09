@@ -9,25 +9,19 @@ import org.cis1200.util.Piece;
 
 public class Bishop extends Piece {
 
+    private static final int[][] moveDirections = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+    
+
     public Bishop(Color color, int[] position, Board board) {
         super(Type.BISHOP, color, position, board);
     }
 
-    private static final int[][] moveDirections = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
-    
-
-    /**
-     * Returns a list of all possible moves for the bishop.
-     * @return A list of all possible positions for the bishop to move to.
-     */
     @Override
-    public List<int[]> getPossibleMoves() {
-
+    public List<int[]> getSimpleMoves() {
         List<int[]> range = new ArrayList<>();
         
         //iterate through all possible move directions
         for (int[] direction : moveDirections) {
-            
             //store current position
             int[] currentPos = Arrays.copyOf(this.getPosition(), 2);
 
@@ -57,9 +51,13 @@ public class Bishop extends Piece {
                 currentPos = newPos;
             }
         }
-
-        //check which moves don't leave king in check
-        range = Board.filterChecklessMoves(this, range);
+        
         return range;
+    }
+
+    @Override
+    public List<int[]> getLegalMoves() {
+        List<int[]> moves = getSimpleMoves();
+        return Board.filterChecklessMoves(this, moves);
     }
 }

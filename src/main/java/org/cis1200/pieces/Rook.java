@@ -22,8 +22,7 @@ public class Rook extends Piece {
      * @return A list of all possible positions for the bishop to move to.
      */
     @Override
-    public List<int[]> getPossibleMoves() {
-
+    public List<int[]> getSimpleMoves() {
         List<int[]> range = new ArrayList<>();
 
         //iterate through all possible move directions
@@ -58,9 +57,12 @@ public class Rook extends Piece {
                 currentPos = newPos;
             }
         }
-
-        //check which moves don't leave king in check
-        range = Board.filterChecklessMoves(this, range);
         return range;
+    }
+
+    @Override
+    public List<int[]> getLegalMoves() {
+        List<int[]> moves = getSimpleMoves();
+        return Board.filterChecklessMoves(this, moves);
     }
 }

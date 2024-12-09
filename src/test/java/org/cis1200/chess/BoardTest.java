@@ -5,18 +5,23 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.cis1200.pieces.*;
+import org.cis1200.util.Piece;
+import java.util.List;
+import java.util.Map;
 
 public class BoardTest {
-    private String startingPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    private String scholarMateSetup = "r1bqkbnr/pppppppp/2n5/4P3/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 3";
-    private String foolMatePosition = "rnb1kbnr/pppppppp/8/8/3q4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 3";
-    private String kingPawnEndgame = "8/8/8/8/8/8/5K2/4k3 w - - 0 1";
-    private String queensGambitDeclined = "rnbqkbnr/ppp2ppp/8/3pp3/2P5/8/PP1PPPPP/RNBQKBNR w KQkq - 0 4";
-    private String castlingTest = "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1";
-    private String promotionPosition = "8/4P3/8/8/8/8/8/4k2K w - - 0 1";
-    private String midGameBattle = "r1bqkb1r/pppppppp/2n5/8/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 3 4";
-    private String enPassantExample = "8/8/8/3pP3/8/8/8/8 w - d6 0 2";
-    private String checkmateExample = "rnb1kbnr/pppp1ppp/8/4p3/4P3/3P4/PPP2PPP/RNBQKBNR b KQkq - 0 5";
+    private static final String STARTING_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    private static final String SCHOLAR_MATE_SETUP = "r1bqkbnr/pppppppp/2n5/4P3/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 3";
+    private static final String FOOL_MATE_POSITION = "rnb1kbnr/pppppppp/8/8/3q4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 3";
+    private static final String KING_PAWN_ENDGAME = "8/8/8/8/8/8/5K2/4k3 w - - 0 1";
+    private static final String QUEENS_GAMBIT_DECLINED = "rnbqkbnr/ppp2ppp/8/3pp3/2P5/8/PP1PPPPP/RNBQKBNR w KQkq - 0 4";
+    private static final String CASTLING_TEST = "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1";
+    private static final String PROMOTION_POSITION = "8/4P3/8/8/8/8/8/4k2K w - - 0 1";
+    private static final String MID_GAME_BATTLE = "r1bqkb1r/pppppppp/2n5/8/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 3 4";
+    private static final String EN_PASSANT_EXAMPLE = "4k3/8/8/4P3/5Pp1/8/8/4K3 b - f3 0 10";
+    private static final String CHECKMATE_EXAMPLE = "rnb1kbnr/pppp1ppp/8/4p3/4P3/3P4/PPP2PPP/RNBQKBNR b KQkq - 0 5";
 
     @Nested
     class FENTests {
@@ -38,7 +43,7 @@ public class BoardTest {
             // Missing move counts
             assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"));
             // Too many components
-            assertFalse(Board.isValidFEN(startingPosition + " - "));
+            assertFalse(Board.isValidFEN(STARTING_POSITION + " - "));
         }
 
         @Test
@@ -146,16 +151,127 @@ public class BoardTest {
         @Test
         void testValidExamplePositions() {
             // Test all the example positions defined at the top of the class
-            assertTrue(Board.isValidFEN(startingPosition));
-            assertTrue(Board.isValidFEN(scholarMateSetup));
-            assertTrue(Board.isValidFEN(foolMatePosition));
-            assertTrue(Board.isValidFEN(kingPawnEndgame));
-            assertTrue(Board.isValidFEN(queensGambitDeclined));
-            assertTrue(Board.isValidFEN(castlingTest));
-            assertTrue(Board.isValidFEN(promotionPosition));
-            assertTrue(Board.isValidFEN(midGameBattle));
-            assertTrue(Board.isValidFEN(enPassantExample));
-            assertTrue(Board.isValidFEN(checkmateExample));
+            assertTrue(Board.isValidFEN(STARTING_POSITION));
+            assertTrue(Board.isValidFEN(SCHOLAR_MATE_SETUP));
+            assertTrue(Board.isValidFEN(FOOL_MATE_POSITION));
+            assertTrue(Board.isValidFEN(KING_PAWN_ENDGAME));
+            assertTrue(Board.isValidFEN(QUEENS_GAMBIT_DECLINED));
+            assertTrue(Board.isValidFEN(CASTLING_TEST));
+            assertTrue(Board.isValidFEN(PROMOTION_POSITION));
+            assertTrue(Board.isValidFEN(MID_GAME_BATTLE));
+            assertTrue(Board.isValidFEN(EN_PASSANT_EXAMPLE));
+            assertTrue(Board.isValidFEN(CHECKMATE_EXAMPLE));
+        }
+    }
+
+    @Nested
+    class PieceManipulationTests {
+        @Test
+        void testAddRemoveGetPiece() {
+            Board board = new Board();
+            int[] position = new int[] { 3, 3 }; // d4
+            Queen queen = new Queen(Piece.Color.WHITE, position, board);
+            
+            // Test adding piece
+            board.addPiece(queen, position);
+            Piece retrievedPiece = board.getPiece(position);
+            assertEquals(queen, retrievedPiece, "Piece should be found at added position");
+            
+            // Test removing piece
+            board.removePiece(position);
+            assertNull(board.getPiece(position), "Position should be empty after removal");
+        }
+    }
+
+    @Nested
+    class LegalMovesTests {
+        @Test
+        void testNormalPosition() {
+            // Position with pieces in standard development
+            Board board = Board.FENtoBoard("r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 0 1");
+            
+            // Test bishop moves (should be 5 legal moves)
+            Piece bishop = board.getPiece(new int[] { 3, 2 }); // c4
+            assertEquals(5, bishop.getPossibleMoves().size(), "Bishop should have 5 legal moves");
+        }
+
+        @Test
+        void testPinnedPiece() {
+            // Position with pinned knight
+            Board board = Board.FENtoBoard("rnb1kb1r/ppppqppp/8/4n3/8/3B4/PPPPQPPP/RNB1K2R b KQkq - 0 1");
+            
+            // Knight is pinned to king by bishop
+            Piece knight = board.getPiece(new int[] { 4, 4 }); // e5
+            assertTrue(knight.getPossibleMoves().isEmpty(), "Pinned knight should have no legal moves");
+        }
+
+        @Test
+        void testMustBlockCheck() {
+            // Position with king in check where only specific pieces can block
+            Board board = Board.FENtoBoard("rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 0 1");
+            
+            // Only f3 pawn can move to g4 to block check
+            Map<Piece, List<int[]>> allMoves = board.getPossibleMoves(Piece.Color.WHITE);
+            int totalMoves = allMoves.values().stream().mapToInt(List::size).sum();
+            assertEquals(1, totalMoves, "Only one legal move should be available");
+        }
+    }
+
+    @Nested
+    class FENConversionTests {
+        @Test
+        void testStartingPositionConsistency() {
+            // Create board from FEN
+            Board fenBoard = Board.FENtoBoard(STARTING_POSITION);
+            
+            // Create board manually
+            Board manualBoard = new Board();
+            // Add white pieces
+            manualBoard.addPiece(new Rook(Piece.Color.WHITE, new int[] { 7, 0 }, manualBoard), new int[] { 7, 0 });
+            manualBoard.addPiece(new Knight(Piece.Color.WHITE, new int[] { 7, 1 }, manualBoard), new int[] { 7, 1 });
+            manualBoard.addPiece(new Bishop(Piece.Color.WHITE, new int[] { 7, 2 }, manualBoard), new int[] { 7, 2 });
+            manualBoard.addPiece(new Queen(Piece.Color.WHITE, new int[] { 7, 3 }, manualBoard), new int[] { 7, 3 });
+            manualBoard.addPiece(new King(Piece.Color.WHITE, new int[] { 7, 4 }, manualBoard), new int[] { 7, 4 });
+            manualBoard.addPiece(new Bishop(Piece.Color.WHITE, new int[] { 7, 5 }, manualBoard), new int[] { 7, 5 });
+            manualBoard.addPiece(new Knight(Piece.Color.WHITE, new int[] { 7, 6 }, manualBoard), new int[] { 7, 6 });
+            manualBoard.addPiece(new Rook(Piece.Color.WHITE, new int[] { 7, 7 }, manualBoard), new int[] { 7, 7 });
+            for (int i = 0; i < 8; i++) {
+                manualBoard.addPiece(new Pawn(Piece.Color.WHITE, new int[] { 6, i }, manualBoard), new int[] { 6, i });
+            }
+            
+            // Add black pieces
+            manualBoard.addPiece(new Rook(Piece.Color.BLACK, new int[] { 0, 0 }, manualBoard), new int[] { 0, 0 });
+            manualBoard.addPiece(new Knight(Piece.Color.BLACK, new int[] { 0, 1 }, manualBoard), new int[] { 0, 1 });
+            manualBoard.addPiece(new Bishop(Piece.Color.BLACK, new int[] { 0, 2 }, manualBoard), new int[] { 0, 2 });
+            manualBoard.addPiece(new Queen(Piece.Color.BLACK, new int[] { 0, 3 }, manualBoard), new int[] { 0, 3 });
+            manualBoard.addPiece(new King(Piece.Color.BLACK, new int[] { 0, 4 }, manualBoard), new int[] { 0, 4 });
+            manualBoard.addPiece(new Bishop(Piece.Color.BLACK, new int[] { 0, 5 }, manualBoard), new int[] { 0, 5 });
+            manualBoard.addPiece(new Knight(Piece.Color.BLACK, new int[] { 0, 6 }, manualBoard), new int[] { 0, 6 });
+            manualBoard.addPiece(new Rook(Piece.Color.BLACK, new int[] { 0, 7 }, manualBoard), new int[] { 0, 7 });
+            for (int i = 0; i < 8; i++) {
+                manualBoard.addPiece(new Pawn(Piece.Color.BLACK, new int[] { 1, i }, manualBoard), new int[] { 1, i });
+            }
+
+            // Compare boards
+            for (int i = 0; i < 8; i++) {
+                for (int j = 0; j < 8; j++) {
+                    Piece fenPiece = fenBoard.getPiece(new int[] { i, j });
+                    Piece manualPiece = manualBoard.getPiece(new int[] { i, j });
+                    if (fenPiece == null || manualPiece == null) {
+                        assertEquals(fenPiece, manualPiece, 
+                            "Pieces should match at position " + i + "," + j);
+                    } else {
+                        assertEquals(fenPiece.getType(), manualPiece.getType(), 
+                            "Piece types should match at position " + i + "," + j);
+                        assertEquals(fenPiece.getColor(), manualPiece.getColor(), 
+                            "Piece colors should match at position " + i + "," + j);
+                    }
+                }
+            }
+
+            // Test FEN conversion back
+            assertEquals(STARTING_POSITION, fenBoard.boardToFEN(), 
+                "Converting board back to FEN should match starting position");
         }
     }
 }

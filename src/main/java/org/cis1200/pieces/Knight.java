@@ -15,8 +15,7 @@ public class Knight extends Piece {
     }
     
     @Override
-    public List<int[]> getPossibleMoves() {
-        
+    public List<int[]> getSimpleMoves() {
         List<int[]> range = new ArrayList<>();
 
         //iterate through all possible move directions
@@ -49,8 +48,9 @@ public class Knight extends Piece {
             range.add(Arrays.copyOf(newPos, 2));
         }
 
-        //check which moves don't leave king in check
-        range = Board.filterChecklessMoves(this, range);
-        return range;
+    @Override
+    public List<int[]> getLegalMoves() {
+        List<int[]> moves = getSimpleMoves();
+        return Board.filterChecklessMoves(this, moves);
     }
 }
