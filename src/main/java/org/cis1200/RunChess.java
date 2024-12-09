@@ -45,29 +45,29 @@ public class RunChess implements Runnable {
 
     private void showInstructions() {
         String instructions = """
-            Chess Game Instructions:
-            
-            1. The game starts with White's turn
-            2. Click on a piece to select it
-            3. Click on a valid square to move the piece
-            4. Captured pieces will be shown in the side panels
-            5. The game ends when:
-               - A player is checkmated
-               - A stalemate occurs
-               - Players agree to a draw
-               - 50-move rule is reached
-               - Threefold repetition occurs
-            
-            Click OK to start the game!
-            """;
+                Chess Game Instructions:
+
+                1. The game starts with White's turn
+                2. Click on a piece to select it
+                3. Click on a valid square to move the piece
+                4. Captured pieces will be shown in the side panels
+                5. The game ends when:
+                   - A player is checkmated
+                   - A stalemate occurs
+                   - Players agree to a draw
+                   - 50-move rule is reached
+                   - Threefold repetition occurs
+
+                Click OK to start the game!
+                """;
 
         JOptionPane.showMessageDialog(
-            null, instructions, "How to Play",
-            JOptionPane.INFORMATION_MESSAGE
+                null, instructions, "How to Play",
+                JOptionPane.INFORMATION_MESSAGE
         );
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new RunChess());
     }
-} 
+}

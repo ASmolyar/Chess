@@ -13,6 +13,7 @@ import org.cis1200.pieces.Pawn;
 import org.cis1200.pieces.Queen;
 import org.cis1200.pieces.Rook;
 import org.cis1200.util.Piece;
+
 public class Board {
     private final Piece[][] board;
 
@@ -65,9 +66,11 @@ public class Board {
     /**
      * Creates a new board with a custom board state.
      */
-    public Board(Piece.Color toMove, int halfMoveClock, int fullMoveNumber, boolean blackKingsideCastle,
+    public Board(
+            Piece.Color toMove, int halfMoveClock, int fullMoveNumber, boolean blackKingsideCastle,
             boolean blackQueensideCastle, boolean whiteKingsideCastle, boolean whiteQueensideCastle,
-            int[] enPassantTarget) {
+            int[] enPassantTarget
+    ) {
         this.board = new Piece[8][8];
         this.toMove = toMove;
         this.halfMoveClock = halfMoveClock;
@@ -87,7 +90,8 @@ public class Board {
 
     /**
      * Adds a piece to the board at a given position.
-     * @param piece The piece to add.
+     * 
+     * @param piece    The piece to add.
      * @param position The position to add the piece to.
      */
     public void addPiece(Piece piece, int[] position) {
@@ -101,6 +105,7 @@ public class Board {
 
     /**
      * Removes a piece from the board at a given position.
+     * 
      * @param position The position to remove the piece from.
      */
     public void removePiece(int[] position) {
@@ -109,6 +114,7 @@ public class Board {
 
     /**
      * Gets the piece at a given position.
+     * 
      * @param position The position to get the piece from.
      * @return The piece at the given position.
      */
@@ -119,6 +125,7 @@ public class Board {
     /**
      * Moves a piece to a new position without validation.
      * Used internally for move validation and checking for check.
+     * 
      * @return a copy of the board with the move made
      */
     public Board tryMove(int[] oldPos, int[] newPos) {
@@ -130,7 +137,9 @@ public class Board {
     }
 
     /**
-     * Given a piece and a list of moves, returns a list of moves that don't leave the king in check.
+     * Given a piece and a list of moves, returns a list of moves that don't leave
+     * the king in check.
+     * 
      * @param piece the piece to check
      * @param moves the list of moves to check
      * @return a list of valid moves
@@ -149,7 +158,8 @@ public class Board {
 
     /**
      * Moves a piece to a new position with validation.
-     * @param piece the piece to move
+     * 
+     * @param piece  the piece to move
      * @param newPos the position to move to
      * @throws IllegalArgumentException if the move is not valid
      */
@@ -220,7 +230,8 @@ public class Board {
 
     /**
      * Checks if a move is valid for a piece.
-     * @param piece the piece to check
+     * 
+     * @param piece  the piece to check
      * @param newPos the position to check
      * @return true if the move is valid
      */
@@ -236,10 +247,13 @@ public class Board {
 
     /**
      * Gets the castling rights.
-     * @return an array of booleans representing the castling rights in the order white kingside, white queenside, black kingside, black queenside
+     * 
+     * @return an array of booleans representing the castling rights in the order
+     *         white kingside, white queenside, black kingside, black queenside
      */
     public boolean[] getCastlingRights() {
-        return new boolean[] { whiteKingsideCastle, whiteQueensideCastle, blackKingsideCastle, blackQueensideCastle };
+        return new boolean[] { whiteKingsideCastle, whiteQueensideCastle, blackKingsideCastle,
+            blackQueensideCastle };
     }
 
     public void setWhiteKingsideCastle(boolean whiteKingsideCastle) {
@@ -264,11 +278,13 @@ public class Board {
 
     /**
      * Checks if a given FEN string is valid.
+     * 
      * @param fen The FEN string to check.
      * @return True if the FEN string is valid, false otherwise.
      */
     public static boolean isValidFEN(String fen) {
-        //check that the FEN has 7 "/" characters and 5 " " characters (this is to check that the FEN is formatted correctly)
+        // check that the FEN has 7 "/" characters and 5 " " characters (this is to
+        // check that the FEN is formatted correctly)
         if (!fen.replaceAll("[^/ ]", "").equals("///////     ")) {
             System.out.println("FEN has incorrect number of \"/\" and \" \" characters");
             return false;
@@ -278,19 +294,21 @@ public class Board {
         String[] parts = fen.split("[ ]");
         if (parts.length != 6) {
             System.out.println(
-                    "FEN has incorrect number of components/is not complete (" + parts.length + " instead of 6)");
+                    "FEN has incorrect number of components/is not complete (" + parts.length
+                            + " instead of 6)"
+            );
             return false;
         }
 
-        //SECTION 1: Check that each row has 8 pieces, and that the pieces are valid
+        // SECTION 1: Check that each row has 8 pieces, and that the pieces are valid
 
-        //check that the kings exist
+        // check that the kings exist
         if (!parts[0].matches("^[^k]*k[^k]*$") || !parts[0].matches("^[^K]*K[^K]*$")) {
             System.out.println("FEN is has too many/few kings (should be 1 of each color)");
             return false;
         }
 
-        //check that each row has 8 pieces and that the pieces are valid
+        // check that each row has 8 pieces and that the pieces are valid
         String[] rows = parts[0].split("/");
         for (int i = 0; i < 8; i++) {
             String currentRow = rows[i];
@@ -307,12 +325,15 @@ public class Board {
                 }
             }
             if (count != 8) {
-                System.out.println("FEN has incorrect number of pieces in a row (row " + i + " has " + count + " instead of 8)");
+                System.out.println(
+                        "FEN has incorrect number of pieces in a row (row " + i + " has " + count
+                                + " instead of 8)"
+                );
                 return false;
             }
         }
 
-        //SECTION 2: Check that the color to move is valid
+        // SECTION 2: Check that the color to move is valid
         String colorStatement = parts[1];
 
         if (!colorStatement.equals("w") && !colorStatement.equals("b")) {
@@ -320,50 +341,52 @@ public class Board {
             return false;
         }
 
-        //SECTION 3: Check that the castling availability is valid
+        // SECTION 3: Check that the castling availability is valid
         String castleStatement = parts[2];
 
-        //general character check
+        // general character check
         if (!castleStatement.equals("-") &&
-            !castleStatement.equals("K") &&
-            !castleStatement.equals("Q") &&
-            !castleStatement.equals("k") &&
-            !castleStatement.equals("q") &&
-            !castleStatement.equals("KQ") &&
-            !castleStatement.equals("Kk") &&
-            !castleStatement.equals("Qk") &&
-            !castleStatement.equals("Kq") &&
-            !castleStatement.equals("kq") &&
-            !castleStatement.equals("Qq") &&
-            !castleStatement.equals("KQk") &&
-            !castleStatement.equals("KQq") &&
-            !castleStatement.equals("Kkq") &&
-            !castleStatement.equals("Qkq") &&
-            !castleStatement.equals("KQkq")) {
+                !castleStatement.equals("K") &&
+                !castleStatement.equals("Q") &&
+                !castleStatement.equals("k") &&
+                !castleStatement.equals("q") &&
+                !castleStatement.equals("KQ") &&
+                !castleStatement.equals("Kk") &&
+                !castleStatement.equals("Qk") &&
+                !castleStatement.equals("Kq") &&
+                !castleStatement.equals("kq") &&
+                !castleStatement.equals("Qq") &&
+                !castleStatement.equals("KQk") &&
+                !castleStatement.equals("KQq") &&
+                !castleStatement.equals("Kkq") &&
+                !castleStatement.equals("Qkq") &&
+                !castleStatement.equals("KQkq")) {
             System.out.println("FEN has invalid castling availability (" + castleStatement + ")");
             return false;
         }
 
         // individual character checks
 
-        //check that BLACK's QUEEN side castle is valid
+        // check that BLACK's QUEEN side castle is valid
         if (castleStatement.contains("q")) {
             String homeBaseString = rows[0];
 
-            //check that the king and rook exist
+            // check that the king and rook exist
             if (!homeBaseString.contains("k") || !homeBaseString.contains("r")) {
                 System.out.println(
-                        "FEN has a castling contradiction for black queen side castle (missing king or rook on back rank)");
+                        "FEN has a castling contradiction for black queen side castle (missing king or rook on back rank)"
+                );
                 return false;
             }
 
-            //isolate relevant characters
+            // isolate relevant characters
             char[] homeBase = homeBaseString.split("k")[0].toCharArray();
 
-            //check that the rook is in the correct position
+            // check that the rook is in the correct position
             if (homeBase[0] != 'r') {
                 System.out.println(
-                        "FEN has a castling contradiction for black queen side castle (rook is not in the correct position)");
+                        "FEN has a castling contradiction for black queen side castle (rook is not in the correct position)"
+                );
                 return false;
             }
             int homeBaseSize = 0;
@@ -373,33 +396,38 @@ public class Board {
                 } else {
                     homeBaseSize++;
                 }
-            }   
-            //check that the king is in the correct position
+            }
+            // check that the king is in the correct position
             if (homeBaseSize != 4) {
                 System.out.println(
-                        "FEN has a castling contradiction for black queen side castle (king is not in the correct position)");
+                        "FEN has a castling contradiction for black queen side castle (king is not in the correct position)"
+                );
                 return false;
             }
         }
 
-        //check that BLACK's KING side castle is valid
+        // check that BLACK's KING side castle is valid
         if (castleStatement.contains("k")) {
             String homeBaseString = rows[0];
 
-            //check that the king and rook exist
+            // check that the king and rook exist
             if (!homeBaseString.contains("k") || !homeBaseString.contains("r")) {
                 System.out.println(
-                        "FEN has a castling contradiction for black king side castle (missing king or rook on back rank)");
+                        "FEN has a castling contradiction for black king side castle (missing king or rook on back rank)"
+                );
                 return false;
             }
 
-            //isolate relevant characters (reversed since the black king side rook is on the right)
-            char[] homeBase = new StringBuilder(homeBaseString).reverse().toString().split("k")[0].toCharArray();
+            // isolate relevant characters (reversed since the black king side rook is on
+            // the right)
+            char[] homeBase = new StringBuilder(homeBaseString).reverse().toString().split("k")[0]
+                    .toCharArray();
 
-            //check that the rook is in the correct position
+            // check that the rook is in the correct position
             if (homeBase[0] != 'r') {
                 System.out.println(
-                        "FEN has a castling contradiction for black king side castle (rook is not in the correct position)");
+                        "FEN has a castling contradiction for black king side castle (rook is not in the correct position)"
+                );
                 return false;
             }
             int homeBaseSize = 0;
@@ -410,32 +438,35 @@ public class Board {
                     homeBaseSize++;
                 }
             }
-            //check that the king is in the correct position
+            // check that the king is in the correct position
             if (homeBaseSize != 3) {
                 System.out.println(
-                        "FEN has a castling contradiction for black king side castle (king is not in the correct position)");
+                        "FEN has a castling contradiction for black king side castle (king is not in the correct position)"
+                );
                 return false;
             }
         }
 
-        //check that WHITE's QUEEN side castle is valid
+        // check that WHITE's QUEEN side castle is valid
         if (castleStatement.contains("Q")) {
             String homeBaseString = rows[7];
 
-            //check that the king and rook exist
+            // check that the king and rook exist
             if (!homeBaseString.contains("K") || !homeBaseString.contains("R")) {
                 System.out.println(
-                        "FEN has a castling contradiction for white queen side castle (missing king or rook on back rank)");
+                        "FEN has a castling contradiction for white queen side castle (missing king or rook on back rank)"
+                );
                 return false;
             }
 
-            //isolate relevant characters
+            // isolate relevant characters
             char[] homeBase = homeBaseString.split("K")[0].toCharArray();
 
-            //check that the rook is in the correct position
+            // check that the rook is in the correct position
             if (homeBase[0] != 'R') {
                 System.out.println(
-                        "FEN has a castling contradiction for white queen side castle (rook is not in the correct position)");
+                        "FEN has a castling contradiction for white queen side castle (rook is not in the correct position)"
+                );
                 return false;
             }
             int homeBaseSize = 0;
@@ -446,32 +477,37 @@ public class Board {
                     homeBaseSize++;
                 }
             }
-            //check that the king is in the correct position
+            // check that the king is in the correct position
             if (homeBaseSize != 4) {
                 System.out.println(
-                        "FEN has a castling contradiction for white queen side castle (king is not in the correct position)");
+                        "FEN has a castling contradiction for white queen side castle (king is not in the correct position)"
+                );
                 return false;
             }
         }
 
-        //check that WHITE's KING side castle is valid
+        // check that WHITE's KING side castle is valid
         if (castleStatement.contains("K")) {
             String homeBaseString = rows[7];
 
-            //check that the king and rook exist
+            // check that the king and rook exist
             if (!homeBaseString.contains("K") || !homeBaseString.contains("R")) {
                 System.out.println(
-                        "FEN has a castling contradiction for white king side castle (missing king or rook on back rank)");
+                        "FEN has a castling contradiction for white king side castle (missing king or rook on back rank)"
+                );
                 return false;
             }
 
-            //isolate relevant characters (reversed since the white king side rook is on the right)
-            char[] homeBase = new StringBuilder(homeBaseString).reverse().toString().split("K")[0].toCharArray();
+            // isolate relevant characters (reversed since the white king side rook is on
+            // the right)
+            char[] homeBase = new StringBuilder(homeBaseString).reverse().toString().split("K")[0]
+                    .toCharArray();
 
-            //check that the rook is in the correct position
+            // check that the rook is in the correct position
             if (homeBase[0] != 'R') {
                 System.out.println(
-                        "FEN has a castling contradiction for white king side castle (rook is not in the correct position)");
+                        "FEN has a castling contradiction for white king side castle (rook is not in the correct position)"
+                );
                 return false;
             }
             int homeBaseSize = 0;
@@ -482,15 +518,16 @@ public class Board {
                     homeBaseSize++;
                 }
             }
-            //check that the king is in the correct position
+            // check that the king is in the correct position
             if (homeBaseSize != 3) {
                 System.out.println(
-                        "FEN has a castling contradiction for white king side castle (king is not in the correct position)");
+                        "FEN has a castling contradiction for white king side castle (king is not in the correct position)"
+                );
                 return false;
             }
         }
 
-        //SECTION 4: Check that the en passant target square is valid
+        // SECTION 4: Check that the en passant target square is valid
         String enPassantTarget = parts[3];
 
         if (!enPassantTarget.equals("-")) {
@@ -498,16 +535,18 @@ public class Board {
             if (!enPassantTarget.matches("^[a-h][36]$")) {
                 System.out.println(
                         "FEN has invalid en passant target square format (must be a-h followed by 3 or 6, recieved "
-                                + enPassantTarget + ")");
+                                + enPassantTarget + ")"
+                );
                 return false;
             }
 
             // Convert algebraic notation to array indices
             int file = enPassantTarget.charAt(0) - 'a';
             int rank = Character.getNumericValue(enPassantTarget.charAt(1));
-            
+
             // Check if there's a pawn of the correct color in the right position
-            int pawnRank = rank + (rank == 5 ? -1 : 1); // For f3 (rank=5), check rank 4; for f6 (rank=2), check rank 3
+            int pawnRank = rank + (rank == 5 ? -1 : 1); // For f3 (rank=5), check rank 4; for f6
+                                                        // (rank=2), check rank 3
 
             String pawnRow = rows[pawnRank];
 
@@ -539,15 +578,18 @@ public class Board {
             }
 
             // Check if there's a pawn of the correct color
-            char expectedPawn = rank == 2 ? 'p' : 'P'; // Black pawn for 3rd rank, white pawn for 6th
+            char expectedPawn = rank == 2 ? 'p' : 'P'; // Black pawn for 3rd rank, white pawn for
+                                                       // 6th
             if (pieceAtFile != expectedPawn) {
-                System.out.println("FEN has invalid en passant target square (no pawn in correct position)");
+                System.out.println(
+                        "FEN has invalid en passant target square (no pawn in correct position)"
+                );
                 System.out.println("Expected " + expectedPawn + " but found " + pieceAtFile);
                 return false;
             }
         }
 
-        //SECTION 5: Check that the halfmove clock is valid
+        // SECTION 5: Check that the halfmove clock is valid
         String halfMoveClockStatement = parts[4];
 
         if (!halfMoveClockStatement.matches("^[0-9]+$")) {
@@ -559,11 +601,13 @@ public class Board {
 
         // If there's an en passant target, halfmove clock must be 0
         if (!parts[3].equals("-") && halfMoveClock != 0) {
-            System.out.println("FEN has invalid halfmove clock (must be 0 when en passant is available)");
+            System.out.println(
+                    "FEN has invalid halfmove clock (must be 0 when en passant is available)"
+            );
             return false;
         }
 
-        //SECTION 6: Check that the fullmove number is valid
+        // SECTION 6: Check that the fullmove number is valid
         String fullMoveNumberStatement = parts[5];
 
         if (!fullMoveNumberStatement.matches("^[0-9]+$")) {
@@ -575,7 +619,10 @@ public class Board {
 
         // Fullmove number must be at least 1 (games start at move 1)
         if (fullMoveNumber < 1) {
-            System.out.println("FEN has invalid fullmove number (must be at least 1, recieved " + fullMoveNumber + ")");
+            System.out.println(
+                    "FEN has invalid fullmove number (must be at least 1, recieved "
+                            + fullMoveNumber + ")"
+            );
             return false;
         }
 
@@ -591,7 +638,8 @@ public class Board {
 
         if (halfMoveClock > maxHalfMoveClock) {
             System.out.println(
-                    "FEN has invalid halfmove clock (exceeds maximum possible value for given fullmove number)");
+                    "FEN has invalid halfmove clock (exceeds maximum possible value for given fullmove number)"
+            );
             return false;
         }
 
@@ -600,6 +648,7 @@ public class Board {
 
     /**
      * Identifies the type and color of a piece given a character.
+     * 
      * @param fen The FEN string to convert to a board.
      * @return A board with the pieces in the FEN string.
      * @throws IllegalArgumentException if the FEN string is invalid.
@@ -618,19 +667,23 @@ public class Board {
         String halfMoveClockString = parts[4];
         String fullMoveNumberString = parts[5];
 
-        Piece.Color colorToMove = colorToMoveString.equals("w") ? Piece.Color.WHITE : Piece.Color.BLACK;
+        Piece.Color colorToMove = colorToMoveString.equals("w") ? Piece.Color.WHITE
+                : Piece.Color.BLACK;
         boolean blackKingsideCastle = castlingRightsString.contains("k");
         boolean blackQueensideCastle = castlingRightsString.contains("q");
         boolean whiteKingsideCastle = castlingRightsString.contains("K");
         boolean whiteQueensideCastle = castlingRightsString.contains("Q");
         int[] enPassantTarget = enPassantTargetString.equals("-") ? null
                 : new int[] { enPassantTargetString.charAt(0) - 'a',
-                        8 - Character.getNumericValue(enPassantTargetString.charAt(1)) };
+                    8 - Character.getNumericValue(enPassantTargetString.charAt(1)) };
         int halfMoveClock = Integer.parseInt(halfMoveClockString);
         int fullMoveNumber = Integer.parseInt(fullMoveNumberString);
 
-        Board board = new Board(colorToMove, halfMoveClock, fullMoveNumber, blackKingsideCastle, blackQueensideCastle,
-                whiteKingsideCastle, whiteQueensideCastle, enPassantTarget);
+        Board board = new Board(
+                colorToMove, halfMoveClock, fullMoveNumber, blackKingsideCastle,
+                blackQueensideCastle,
+                whiteKingsideCastle, whiteQueensideCastle, enPassantTarget
+        );
 
         // Parse the board string
         String[] rows = boardString.split("/");
@@ -641,21 +694,34 @@ public class Board {
                 if (Character.isDigit(c)) {
                     file += Character.getNumericValue(c);
                 } else {
-                    Piece.Color color = Character.isUpperCase(c) ? Piece.Color.WHITE : Piece.Color.BLACK;
+                    Piece.Color color = Character.isUpperCase(c) ? Piece.Color.WHITE
+                            : Piece.Color.BLACK;
                     String cLower = String.valueOf(c).toLowerCase();
                     switch (cLower) {
-                        case "p" ->
-                            board.addPiece(new Pawn(color, new int[] { i, file }, board), new int[] { i, file });
-                        case "n" ->
-                            board.addPiece(new Knight(color, new int[] { i, file }, board), new int[] { i, file });
-                        case "b" ->
-                            board.addPiece(new Bishop(color, new int[] { i, file }, board), new int[] { i, file });
-                        case "r" ->
-                            board.addPiece(new Rook(color, new int[] { i, file }, board), new int[] { i, file });
-                        case "q" ->
-                            board.addPiece(new Queen(color, new int[] { i, file }, board), new int[] { i, file });
-                        case "k" ->
-                            board.addPiece(new King(color, new int[] { i, file }, board), new int[] { i, file });
+                        case "p" -> board.addPiece(
+                                new Pawn(color, new int[] { file, 7 - i }, board),
+                                new int[] { file, 7 - i }
+                        );
+                        case "n" -> board.addPiece(
+                                new Knight(color, new int[] { file, 7 - i }, board),
+                                new int[] { file, 7 - i }
+                        );
+                        case "b" -> board.addPiece(
+                                new Bishop(color, new int[] { file, 7 - i }, board),
+                                new int[] { file, 7 - i }
+                        );
+                        case "r" -> board.addPiece(
+                                new Rook(color, new int[] { file, 7 - i }, board),
+                                new int[] { file, 7 - i }
+                        );
+                        case "q" -> board.addPiece(
+                                new Queen(color, new int[] { file, 7 - i }, board),
+                                new int[] { file, 7 - i }
+                        );
+                        case "k" -> board.addPiece(
+                                new King(color, new int[] { file, 7 - i }, board),
+                                new int[] { file, 7 - i }
+                        );
                     }
                     file++;
                 }
@@ -668,24 +734,18 @@ public class Board {
 
     /**
      * Checks if the king of the given color is in check.
+     * 
      * @param color the color of the king to check
      * @return true if the king is in check
      */
     public boolean isInCheck(Piece.Color color) {
         // Find the king's position
         int[] kingPos = null;
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                Piece piece = board[i][j];
-                if (piece != null &&
-                        piece.getType() == Piece.Type.KING &&
-                        piece.getColor() == color) {
-                    kingPos = new int[] { i, j };
-                    break;
-                }
-            }
-            if (kingPos != null)
+        for (Piece piece : color == Piece.Color.WHITE ? whitePieces : blackPieces) {
+            if (piece.getType() == Piece.Type.KING) {
+                kingPos = piece.getPosition();
                 break;
+            }
         }
 
         // Check if any opponent piece can capture the king
@@ -718,6 +778,7 @@ public class Board {
 
     /**
      * Gets the current en passant target square
+     * 
      * @return the target square coordinates, or null if none exists
      */
     public int[] getEnPassantTarget() {
@@ -726,11 +787,15 @@ public class Board {
 
     /**
      * Creates a deep copy of the board, including all pieces and game state.
+     * 
      * @return A new Board instance with the same state
      */
     public Board copy() {
-        Board newBoard = new Board(this.toMove, this.halfMoveClock, this.fullMoveNumber, this.blackKingsideCastle,
-                this.blackQueensideCastle, this.whiteKingsideCastle, this.whiteQueensideCastle, this.enPassantTarget);
+        Board newBoard = new Board(
+                this.toMove, this.halfMoveClock, this.fullMoveNumber, this.blackKingsideCastle,
+                this.blackQueensideCastle, this.whiteKingsideCastle, this.whiteQueensideCastle,
+                this.enPassantTarget
+        );
 
         // Copy pieces
         for (int i = 0; i < 8; i++) {
@@ -755,6 +820,7 @@ public class Board {
 
     /**
      * Gets the possible moves for all pieces of the given color.
+     * 
      * @param color the color of the pieces to get moves for
      * @return a map of pieces to their possible moves
      */
@@ -774,6 +840,7 @@ public class Board {
 
     /**
      * Checks if the given color is in checkmate.
+     * 
      * @param color the color to check
      * @return true if the color is in checkmate
      */
@@ -783,6 +850,7 @@ public class Board {
 
     /**
      * Checks if the given color is in stalemate.
+     * 
      * @param color the color to check
      * @return true if the color is in stalemate
      */
@@ -817,7 +885,8 @@ public class Board {
 
     /**
      * Updates game state after a move
-     * @param piece The piece that was moved
+     * 
+     * @param piece  The piece that was moved
      * @param oldPos The position the piece moved from
      * @param newPos The position the piece moved to
      */
@@ -833,7 +902,8 @@ public class Board {
         }
 
         // Store old state
-        Piece.Color oppositeColor = (piece.getColor() == Piece.Color.WHITE) ? Piece.Color.BLACK : Piece.Color.WHITE;
+        Piece.Color oppositeColor = (piece.getColor() == Piece.Color.WHITE) ? Piece.Color.BLACK
+                : Piece.Color.WHITE;
 
         // Make temporary move to check for check/checkmate
         Board tempBoard = this.copy();
@@ -920,12 +990,14 @@ public class Board {
         if ((whitePieceCount == 2 && blackPieceCount == 1) ||
                 (whitePieceCount == 1 && blackPieceCount == 2)) {
             for (Piece p : whitePieces) {
-                if (p.isActive() && (p.getType() == Piece.Type.BISHOP || p.getType() == Piece.Type.KNIGHT)) {
+                if (p.isActive()
+                        && (p.getType() == Piece.Type.BISHOP || p.getType() == Piece.Type.KNIGHT)) {
                     return true;
                 }
             }
             for (Piece p : blackPieces) {
-                if (p.isActive() && (p.getType() == Piece.Type.BISHOP || p.getType() == Piece.Type.KNIGHT)) {
+                if (p.isActive()
+                        && (p.getType() == Piece.Type.BISHOP || p.getType() == Piece.Type.KNIGHT)) {
                     return true;
                 }
             }
@@ -972,22 +1044,25 @@ public class Board {
      * Converts a position array to algebraic notation (e.g. [0,0] -> "a1")
      */
     private String positionToAlgebraic(int[] pos) {
-        char file = (char) ('a' + pos[1]); // Convert column to letter
-        int rank = pos[0] + 1; // Convert row to number
+        char file = (char) ('a' + pos[0]); // First index is file (a-h)
+        int rank = pos[1] + 1; // Second index is rank (1-8)
         return "" + file + rank;
     }
 
     /**
      * Adds a move to the move history in algebraic notation
-     * @param piece The piece that moved
-     * @param oldPos Starting position
-     * @param newPos Ending position
-     * @param isCapture Whether the move was a capture
-     * @param isCheck Whether the move puts opponent in check
+     * 
+     * @param piece       The piece that moved
+     * @param oldPos      Starting position
+     * @param newPos      Ending position
+     * @param isCapture   Whether the move was a capture
+     * @param isCheck     Whether the move puts opponent in check
      * @param isCheckmate Whether the move is checkmate
      */
-    private void recordMove(Piece piece, int[] oldPos, int[] newPos, boolean isCapture,
-            boolean isCheck, boolean isCheckmate) {
+    private void recordMove(
+            Piece piece, int[] oldPos, int[] newPos, boolean isCapture,
+            boolean isCheck, boolean isCheckmate
+    ) {
         StringBuilder moveNotation = new StringBuilder();
 
         // Add piece letter (except for pawns)
@@ -1030,6 +1105,7 @@ public class Board {
 
     /**
      * Gets the move history in algebraic notation
+     * 
      * @return List of moves in algebraic notation
      */
     public List<String> getMoveHistory() {
@@ -1062,7 +1138,10 @@ public class Board {
                         case QUEEN -> 'q';
                         case KING -> 'k';
                     };
-                    fen.append(piece.getColor() == Piece.Color.WHITE ? Character.toUpperCase(pieceChar) : pieceChar);
+                    fen.append(
+                            piece.getColor() == Piece.Color.WHITE ? Character.toUpperCase(pieceChar)
+                                    : pieceChar
+                    );
                 }
             }
             if (emptyCount > 0) {
@@ -1124,4 +1203,3 @@ public class Board {
         return board;
     }
 }
-

@@ -1,26 +1,29 @@
 package org.cis1200.util;
+
 import java.util.List;
 import java.util.Map;
 
 import org.cis1200.Board;
+
 public abstract class Piece {
     public static enum Type {
         PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING
     }
 
     public static Map<Type, Integer> pieceValues = Map.of(
-        Type.PAWN, 1,
-        Type.KNIGHT, 3,
-        Type.BISHOP, 3,
-        Type.ROOK, 5,
-        Type.QUEEN, 9,
-        Type.KING, 0);
+            Type.PAWN, 1,
+            Type.KNIGHT, 3,
+            Type.BISHOP, 3,
+            Type.ROOK, 5,
+            Type.QUEEN, 9,
+            Type.KING, 0
+    );
 
     public static enum Color {
         WHITE, BLACK
     }
-    
-    private final Type type;  
+
+    private final Type type;
     private final Color color;
     private boolean active;
     private int x;
@@ -36,7 +39,7 @@ public abstract class Piece {
         this.board = board;
     }
 
-    //getters
+    // getters
 
     /**
      * @return the type of the piece
@@ -77,18 +80,22 @@ public abstract class Piece {
      * @return the position of the piece
      */
     public int[] getPosition() {
-        return new int[] {this.x, this.y};
+        return new int[] { this.x, this.y };
     }
-      
+
     /**
-     * Returns a list of all possible moves for the piece without checking if they leave the king in check.
+     * Returns a list of all possible moves for the piece without checking if they
+     * leave the king in check.
      * Used internally to prevent infinite recursion when checking for check.
+     * 
      * @return A list of all possible positions for the piece to move to.
      */
     public abstract List<int[]> getSimpleMoves();
 
     /**
-     * Returns a list of all legal moves for the piece, including checking if they leave the king in check.
+     * Returns a list of all legal moves for the piece, including checking if they
+     * leave the king in check.
+     * 
      * @return A list of all possible positions for the piece to move to.
      */
     public abstract List<int[]> getLegalMoves();
@@ -96,8 +103,8 @@ public abstract class Piece {
     public Board getBoard() {
         return this.board;
     }
-    
-    //setters
+
+    // setters
 
     /**
      * sets the active status of the piece
@@ -118,14 +125,14 @@ public abstract class Piece {
         this.x = x;
         this.y = y;
     }
-    
-    //checkers
+
+    // checkers
 
     /**
      * @return whether the move to the new position is valid
      */
     public boolean isValidMove(int newX, int newY) {
-        return this.getLegalMoves().contains(new int[] {newX, newY});
+        return this.getLegalMoves().contains(new int[] { newX, newY });
     }
-        
+
 }

@@ -18,7 +18,7 @@ public class ChessBoard extends JPanel {
     private JPanel[][] squares; // squares on the board
     private JLabel status; // current status text
     private Piece selectedPiece; // currently selected piece
-    
+
     // Game constants
     public static final int BOARD_SIZE = 8;
     public static final int SQUARE_SIZE = 60;
@@ -54,7 +54,7 @@ public class ChessBoard extends JPanel {
                 square.setPreferredSize(new Dimension(SQUARE_SIZE, SQUARE_SIZE));
                 square.setBackground(isLight ? Color.WHITE : Color.GRAY);
                 square.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-                
+
                 // Add mouse listener to handle moves
                 final int r = row;
                 final int c = col;
@@ -64,7 +64,7 @@ public class ChessBoard extends JPanel {
                         handleSquareClick(r, c);
                     }
                 });
-                
+
                 squares[row][col] = square;
                 add(square);
                 isLight = !isLight;
@@ -75,27 +75,27 @@ public class ChessBoard extends JPanel {
     }
 
     private void handleSquareClick(int row, int col) {
-        Piece clickedPiece = gameBoard.getPiece(new int[]{row, col});
-        
+        Piece clickedPiece = gameBoard.getPiece(new int[] { row, col });
+
         // If no piece is selected and clicked on a piece of current player's color
-        if (selectedPiece == null && clickedPiece != null && 
-            clickedPiece.getColor() == gameBoard.getToMove()) {
+        if (selectedPiece == null && clickedPiece != null &&
+                clickedPiece.getColor() == gameBoard.getToMove()) {
             selectedPiece = clickedPiece;
             highlightSquare(row, col);
-            highlightPossibleMoves(clickedPiece);
-        } 
+            highlightLegalMoves(clickedPiece);
+        }
         // If a piece is selected
         else if (selectedPiece != null) {
             // Try to make the move
             try {
-                gameBoard.movePiece(selectedPiece, new int[]{row, col});
+                gameBoard.movePiece(selectedPiece, new int[] { row, col });
                 updateBoard();
                 updateStatus();
             } catch (IllegalArgumentException ex) {
                 // Invalid move, deselect piece
                 System.out.println("Invalid move: " + ex.getMessage());
             }
-            
+
             // Clear selection and highlights
             selectedPiece = null;
             clearHighlights();
@@ -106,8 +106,8 @@ public class ChessBoard extends JPanel {
         squares[row][col].setBackground(Color.YELLOW);
     }
 
-    private void highlightPossibleMoves(Piece piece) {
-        for (int[] move : piece.getPossibleMoves()) {
+    private void highlightLegalMoves(Piece piece) {
+        for (int[] move : piece.getLegalMoves()) {
             squares[move[0]][move[1]].setBackground(Color.GREEN);
         }
     }
@@ -128,9 +128,9 @@ public class ChessBoard extends JPanel {
         for (int row = 0; row < BOARD_SIZE; row++) {
             for (int col = 0; col < BOARD_SIZE; col++) {
                 squares[row][col].removeAll();
-                
+
                 // Add piece label if there is a piece
-                Piece piece = gameBoard.getPiece(new int[]{row, col});
+                Piece piece = gameBoard.getPiece(new int[] { row, col });
                 if (piece != null) {
                     JLabel pieceLabel = new JLabel(getPieceSymbol(piece));
                     pieceLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -139,7 +139,7 @@ public class ChessBoard extends JPanel {
                 }
             }
         }
-        
+
         // Refresh the display
         revalidate();
         repaint();
@@ -154,17 +154,17 @@ public class ChessBoard extends JPanel {
             case KNIGHT -> "♘";
             case PAWN -> "♙";
         };
-        
+
         // Use black symbols for black pieces
         if (piece.getColor() == Piece.Color.BLACK) {
             symbol = symbol.replace('♔', '♚')
-                         .replace('♕', '♛')
-                         .replace('♖', '♜')
-                         .replace('♗', '♝')
-                         .replace('♘', '♞')
-                         .replace('♙', '♟');
+                    .replace('♕', '♛')
+                    .replace('♖', '♜')
+                    .replace('♗', '♝')
+                    .replace('♘', '♞')
+                    .replace('♙', '♟');
         }
-        
+
         return symbol;
     }
 
@@ -172,16 +172,16 @@ public class ChessBoard extends JPanel {
         if (gameBoard.isGameOver()) {
             if (gameBoard.isCheckmate(gameBoard.getToMove())) {
                 status.setText(
-                    (gameBoard.getToMove() == Piece.Color.WHITE ? "Black" : "White") + 
-                    " wins by checkmate!"
+                        (gameBoard.getToMove() == Piece.Color.WHITE ? "Black" : "White") +
+                                " wins by checkmate!"
                 );
             } else {
                 status.setText("Game Over - Draw!");
             }
         } else {
             status.setText(
-                (gameBoard.getToMove() == Piece.Color.WHITE ? "White" : "Black") + 
-                "'s turn"
+                    (gameBoard.getToMove() == Piece.Color.WHITE ? "White" : "Black") +
+                            "'s turn"
             );
         }
     }
@@ -201,4 +201,4 @@ public class ChessBoard extends JPanel {
     public Dimension getPreferredSize() {
         return new Dimension(BOARD_SIZE * SQUARE_SIZE, BOARD_SIZE * SQUARE_SIZE);
     }
-} 
+}

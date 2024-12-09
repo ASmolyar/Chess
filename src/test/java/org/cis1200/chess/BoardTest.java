@@ -1,15 +1,17 @@
 package org.cis1200.chess;
 
+import java.util.List;
+import java.util.Map;
+
 import org.cis1200.Board;
+import org.cis1200.pieces.Queen;
+import org.cis1200.util.Piece;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-import org.cis1200.pieces.*;
-import org.cis1200.util.Piece;
-import java.util.List;
-import java.util.Map;
 
 public class BoardTest {
     private static final String STARTING_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -31,7 +33,9 @@ public class BoardTest {
             // Not enough rows
             assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
             // Too many rows
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+            );
         }
 
         @Test
@@ -49,103 +53,173 @@ public class BoardTest {
         @Test
         void testKingCount() {
             // No white king
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQQBNR w KQkq - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQQBNR w KQkq - 0 1")
+            );
             // No black king
-            assertFalse(Board.isValidFEN("rnbqqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+            );
             // Multiple white kings
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKKBNR w KQkq - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKKBNR w KQkq - 0 1")
+            );
             // Multiple black kings
-            assertFalse(Board.isValidFEN("rnbkkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbkkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+            );
         }
 
         @Test
         void testInvalidPieces() {
             // Invalid piece character
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBxR w KQkq - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBxR w KQkq - 0 1")
+            );
         }
 
         @Test
         void testInvalidRowLength() {
             // Too many pieces in a row
-            assertFalse(Board.isValidFEN("rnbqkbnrr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnrr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+            );
             // Too few pieces in a row
-            assertFalse(Board.isValidFEN("rnbqkbn/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbn/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+            );
             // Invalid number in row
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/9/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/9/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+            );
         }
 
         @Test
         void testInvalidColorToMove() {
             // Invalid color character
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR x KQkq - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR x KQkq - 0 1")
+            );
         }
 
         @Test
         void testInvalidCastling() {
             // Invalid characters
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w XQkq - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w XQkq - 0 1")
+            );
             // Duplicate rights
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KKkq - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KKkq - 0 1")
+            );
         }
 
         @Test
         void testCastlingPositionValidity() {
             // White kingside castle rights but no rook
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN1 w K - - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN1 w K - - 0 1")
+            );
             // White queenside castle rights but no rook
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/1NBQKBNR w Q - - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/1NBQKBNR w Q - - 0 1")
+            );
             // Black kingside castle rights but no rook
-            assertFalse(Board.isValidFEN("rnbqkbn1/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w k - - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbn1/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w k - - 0 1")
+            );
             // Black queenside castle rights but no rook
-            assertFalse(Board.isValidFEN("1nbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w q - - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("1nbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w q - - 0 1")
+            );
             // White kingside castle rights but no king
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPKPPPP/RNBQ1BNR w K - - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPKPPPP/RNBQ1BNR w K - - 0 1")
+            );
             // White queenside castle rights but no king
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPKPPPP/RNBQ1BNR w Q - - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPKPPPP/RNBQ1BNR w Q - - 0 1")
+            );
             // Black kingside castle rights but no king
-            assertFalse(Board.isValidFEN("rnbq1bnr/pppkpppp/8/8/8/8/PPPPPPPP/RNBQKBNR w k - - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbq1bnr/pppkpppp/8/8/8/8/PPPPPPPP/RNBQKBNR w k - - 0 1")
+            );
             // Black queenside castle rights but no king
-            assertFalse(Board.isValidFEN("rnbq1bnr/pppkpppp/8/8/8/8/PPPPPPPP/RNBQKBNR w q - - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbq1bnr/pppkpppp/8/8/8/8/PPPPPPPP/RNBQKBNR w q - - 0 1")
+            );
             // White kingside castle rights but king moved
-            assertFalse(Board.isValidFEN("rnbqbknr/pppppppp/8/8/8/8/PPPKPPPP/RNBQBKNR w K - - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqbknr/pppppppp/8/8/8/8/PPPKPPPP/RNBQBKNR w K - - 0 1")
+            );
             // White queenside castle rights but king moved
-            assertFalse(Board.isValidFEN("rnbqbknr/pppppppp/8/8/8/8/PPPKPPPP/RNBQBKNR w Q - - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqbknr/pppppppp/8/8/8/8/PPPKPPPP/RNBQBKNR w Q - - 0 1")
+            );
             // Black kingside castle rights but king moved
-            assertFalse(Board.isValidFEN("rnbqbknr/pppppppp/8/8/8/8/PPPKPPPP/RNBQBKNR w k - - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqbknr/pppppppp/8/8/8/8/PPPKPPPP/RNBQBKNR w k - - 0 1")
+            );
             // Black queenside castle rights but king moved
-            assertFalse(Board.isValidFEN("rnbqbknr/pppppppp/8/8/8/8/PPPKPPPP/RNBQBKNR w q - - 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqbknr/pppppppp/8/8/8/8/PPPKPPPP/RNBQBKNR w q - - 0 1")
+            );
         }
 
         @Test
         void testInvalidEnPassant() {
             // Invalid format
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq x6 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq x6 0 1")
+            );
             // Invalid square
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq e4 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq e4 0 1")
+            );
             // No pawn in correct position
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 1")
+            );
             // Wrong player to move
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 1"));
+            assertFalse(
+                    Board.isValidFEN(
+                            "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 1"
+                    )
+            );
         }
 
         @Test
         void testInvalidHalfmoveClock() {
             // Not a number
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - x 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - x 1")
+            );
             // Negative number
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - -1 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - -1 1")
+            );
             // Non-zero halfmove clock with en passant
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 1 1"));
+            assertFalse(
+                    Board.isValidFEN(
+                            "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 1 1"
+                    )
+            );
         }
 
         @Test
         void testInvalidFullmoveNumber() {
             // Not a number
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 x"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 x")
+            );
             // Zero or negative
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0")
+            );
             // Too small relative to halfmove clock
-            assertFalse(Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 40 1"));
+            assertFalse(
+                    Board.isValidFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 40 1")
+            );
         }
 
         @Test
@@ -171,12 +245,12 @@ public class BoardTest {
             Board board = new Board();
             int[] position = new int[] { 3, 3 }; // d4
             Queen queen = new Queen(Piece.Color.WHITE, position, board);
-            
+
             // Test adding piece
             board.addPiece(queen, position);
             Piece retrievedPiece = board.getPiece(position);
             assertEquals(queen, retrievedPiece, "Piece should be found at added position");
-            
+
             // Test removing piece
             board.removePiece(position);
             assertNull(board.getPiece(position), "Position should be empty after removal");
@@ -187,91 +261,42 @@ public class BoardTest {
     class LegalMovesTests {
         @Test
         void testNormalPosition() {
-            // Position with pieces in standard development
-            Board board = Board.FENtoBoard("r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 0 1");
-            
+            Board board = Board.FENtoBoard(
+                    "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 0 1"
+            );
+
             // Test bishop moves (should be 5 legal moves)
-            Piece bishop = board.getPiece(new int[] { 3, 2 }); // c4
-            assertEquals(5, bishop.getPossibleMoves().size(), "Bishop should have 5 legal moves");
+            Piece bishop = board.getPiece(new int[] { 2, 3 }); // c4 - file c (index 2), rank 4
+                                                               // (index 3)
+            assertEquals(6, bishop.getLegalMoves().size(), "Bishop should have 6 legal moves");
         }
 
         @Test
         void testPinnedPiece() {
             // Position with pinned knight
-            Board board = Board.FENtoBoard("rnb1kb1r/ppppqppp/8/4n3/8/3B4/PPPPQPPP/RNB1K2R b KQkq - 0 1");
-            
+            Board board = Board
+                    .FENtoBoard("rnb1kb1r/pppp1ppp/8/4n3/8/3B4/PPPPQPPP/RNB1K2R b KQkq - 0 1");
+
             // Knight is pinned to king by bishop
             Piece knight = board.getPiece(new int[] { 4, 4 }); // e5
-            assertTrue(knight.getPossibleMoves().isEmpty(), "Pinned knight should have no legal moves");
+            assertTrue(
+                    knight.getLegalMoves().isEmpty(), "Pinned knight should have no legal moves"
+            );
         }
 
         @Test
         void testMustBlockCheck() {
             // Position with king in check where only specific pieces can block
-            Board board = Board.FENtoBoard("rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 0 1");
-            
+            Board board = Board
+                    .FENtoBoard("rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 0 1");
+
             // Only f3 pawn can move to g4 to block check
-            Map<Piece, List<int[]>> allMoves = board.getPossibleMoves(Piece.Color.WHITE);
+            Map<Piece, List<int[]>> allMoves = board.getLegalMoves(Piece.Color.WHITE);
             int totalMoves = allMoves.values().stream().mapToInt(List::size).sum();
-            assertEquals(1, totalMoves, "Only one legal move should be available");
-        }
-    }
-
-    @Nested
-    class FENConversionTests {
-        @Test
-        void testStartingPositionConsistency() {
-            // Create board from FEN
-            Board fenBoard = Board.FENtoBoard(STARTING_POSITION);
-            
-            // Create board manually
-            Board manualBoard = new Board();
-            // Add white pieces
-            manualBoard.addPiece(new Rook(Piece.Color.WHITE, new int[] { 7, 0 }, manualBoard), new int[] { 7, 0 });
-            manualBoard.addPiece(new Knight(Piece.Color.WHITE, new int[] { 7, 1 }, manualBoard), new int[] { 7, 1 });
-            manualBoard.addPiece(new Bishop(Piece.Color.WHITE, new int[] { 7, 2 }, manualBoard), new int[] { 7, 2 });
-            manualBoard.addPiece(new Queen(Piece.Color.WHITE, new int[] { 7, 3 }, manualBoard), new int[] { 7, 3 });
-            manualBoard.addPiece(new King(Piece.Color.WHITE, new int[] { 7, 4 }, manualBoard), new int[] { 7, 4 });
-            manualBoard.addPiece(new Bishop(Piece.Color.WHITE, new int[] { 7, 5 }, manualBoard), new int[] { 7, 5 });
-            manualBoard.addPiece(new Knight(Piece.Color.WHITE, new int[] { 7, 6 }, manualBoard), new int[] { 7, 6 });
-            manualBoard.addPiece(new Rook(Piece.Color.WHITE, new int[] { 7, 7 }, manualBoard), new int[] { 7, 7 });
-            for (int i = 0; i < 8; i++) {
-                manualBoard.addPiece(new Pawn(Piece.Color.WHITE, new int[] { 6, i }, manualBoard), new int[] { 6, i });
-            }
-            
-            // Add black pieces
-            manualBoard.addPiece(new Rook(Piece.Color.BLACK, new int[] { 0, 0 }, manualBoard), new int[] { 0, 0 });
-            manualBoard.addPiece(new Knight(Piece.Color.BLACK, new int[] { 0, 1 }, manualBoard), new int[] { 0, 1 });
-            manualBoard.addPiece(new Bishop(Piece.Color.BLACK, new int[] { 0, 2 }, manualBoard), new int[] { 0, 2 });
-            manualBoard.addPiece(new Queen(Piece.Color.BLACK, new int[] { 0, 3 }, manualBoard), new int[] { 0, 3 });
-            manualBoard.addPiece(new King(Piece.Color.BLACK, new int[] { 0, 4 }, manualBoard), new int[] { 0, 4 });
-            manualBoard.addPiece(new Bishop(Piece.Color.BLACK, new int[] { 0, 5 }, manualBoard), new int[] { 0, 5 });
-            manualBoard.addPiece(new Knight(Piece.Color.BLACK, new int[] { 0, 6 }, manualBoard), new int[] { 0, 6 });
-            manualBoard.addPiece(new Rook(Piece.Color.BLACK, new int[] { 0, 7 }, manualBoard), new int[] { 0, 7 });
-            for (int i = 0; i < 8; i++) {
-                manualBoard.addPiece(new Pawn(Piece.Color.BLACK, new int[] { 1, i }, manualBoard), new int[] { 1, i });
-            }
-
-            // Compare boards
-            for (int i = 0; i < 8; i++) {
-                for (int j = 0; j < 8; j++) {
-                    Piece fenPiece = fenBoard.getPiece(new int[] { i, j });
-                    Piece manualPiece = manualBoard.getPiece(new int[] { i, j });
-                    if (fenPiece == null || manualPiece == null) {
-                        assertEquals(fenPiece, manualPiece, 
-                            "Pieces should match at position " + i + "," + j);
-                    } else {
-                        assertEquals(fenPiece.getType(), manualPiece.getType(), 
-                            "Piece types should match at position " + i + "," + j);
-                        assertEquals(fenPiece.getColor(), manualPiece.getColor(), 
-                            "Piece colors should match at position " + i + "," + j);
-                    }
-                }
-            }
-
-            // Test FEN conversion back
-            assertEquals(STARTING_POSITION, fenBoard.boardToFEN(), 
-                "Converting board back to FEN should match starting position");
+            assertEquals(0, totalMoves, "Zero legal moves should be available");
+            assertEquals(
+                    true, board.isCheckmate(Piece.Color.WHITE), "White should be in checkmate"
+            );
         }
     }
 }
