@@ -1,13 +1,18 @@
 package org.cis1200;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Arrays;
+import java.util.TreeMap;
 
+import org.cis1200.pieces.Bishop;
+import org.cis1200.pieces.King;
+import org.cis1200.pieces.Knight;
+import org.cis1200.pieces.Pawn;
+import org.cis1200.pieces.Queen;
+import org.cis1200.pieces.Rook;
 import org.cis1200.util.Piece;
-import org.cis1200.util.Position;
-import org.cis1200.pieces.*;
-import java.util.ArrayList;
 public class Board {
     private Piece[][] board;
 
@@ -25,11 +30,15 @@ public class Board {
     private boolean whiteKingsideCastle;
     private boolean whiteQueensideCastle;
 
-    private Piece[] whitePieces;
-    private Piece[] blackPieces;
+    private List<Piece> whitePieces;
+    private List<Piece> blackPieces;
 
     // En passant target coord
     private int[] enPassantTarget;
+
+    private List<String> moveHistory;
+
+    private List<String> positionHistory;
 
     /**
      * Creates a new empty board.
@@ -44,16 +53,20 @@ public class Board {
         this.blackKingsideCastle = true;
         this.blackQueensideCastle = true;
         this.enPassantTarget = null;
-        this.whitePieces = new Piece[16];
-        this.blackPieces = new Piece[16];
+        this.whitePieces = new ArrayList<>();
+        this.blackPieces = new ArrayList<>();
+        this.moveHistory = new ArrayList<>();
+        this.positionHistory = new ArrayList<>();
     }
 
 
     /**
      * Creates a new board with a custom board state.
      */
-    public Board(Piece[][] board, Piece.Color toMove, int halfMoveClock, int fullMoveNumber, boolean blackKingsideCastle, boolean blackQueensideCastle, boolean whiteKingsideCastle, boolean whiteQueensideCastle, int[] enPassantTarget) {
-        this.board = board;
+    public Board(Piece.Color toMove, int halfMoveClock, int fullMoveNumber, boolean blackKingsideCastle,
+            boolean blackQueensideCastle, boolean whiteKingsideCastle, boolean whiteQueensideCastle,
+            int[] enPassantTarget) {
+        this.board = new Piece[8][8];
         this.toMove = toMove;
         this.halfMoveClock = halfMoveClock;
         this.fullMoveNumber = fullMoveNumber;
@@ -64,24 +77,10 @@ public class Board {
         this.enPassantTarget = enPassantTarget;
         
         // Initialize piece arrays
-        this.whitePieces = new Piece[16];
-        this.blackPieces = new Piece[16];
-        
-        // Populate piece arrays
-        int whiteIndex = 0;
-        int blackIndex = 0;
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                Piece piece = board[i][j];
-                if (piece != null) {
-                    if (piece.getColor() == Piece.Color.WHITE) {
-                        whitePieces[whiteIndex++] = piece;
-                    } else {
-                        blackPieces[blackIndex++] = piece;
-                    }
-                }
-            }
-        }
+        this.whitePieces = new ArrayList<>();
+        this.blackPieces = new ArrayList<>();
+        this.moveHistory = new ArrayList<>();
+        this.positionHistory = new ArrayList<>();
     }
 
     /**
@@ -91,16 +90,11 @@ public class Board {
      */
     public void addPiece(Piece piece, int[] position) {
         this.board[position[0]][position[1]] = piece;
-    }
-
-    /**
-     * Adds a piece to the board at a given position.
-     * @param piece The piece to add.
-     * @param x The x coordinate to add the piece to.
-     * @param y The y coordinate to add the piece to.
-     */
-    public void addPiece(Piece piece, int x, int y) {
-        this.board[x][y] = piece;
+        if (piece.getColor() == Piece.Color.WHITE) {
+            this.whitePieces.add(piece);
+        } else {
+            this.blackPieces.add(piece);
+        }
     }
 
     /**
@@ -109,15 +103,6 @@ public class Board {
      */
     public void removePiece(int[] position) {
         this.board[position[0]][position[1]] = null;
-    }
-
-    /**
-     * Removes a piece from the board at a given position.
-     * @param x The x coordinate to remove the piece from.
-     * @param y The y coordinate to remove the piece from.
-     */
-    public void removePiece(int x, int y) {
-        this.board[x][y] = null;
     }
 
     /**
@@ -171,17 +156,64 @@ public class Board {
             throw new IllegalArgumentException("Invalid move");
         }
 
-        // Handle capture
-        Piece atNewPos = getPiece(newPos);
-        if (atNewPos != null) {
-            atNewPos.setActive(false);
+        int[] oldPos = piece.getPosition();
+
+        // Handle castling
+        if (piece.getType() == Piece.Type.KING && Math.abs(newPos[1] - oldPos[1]) == 2) {
+            // Kingside castle
+            if (newPos[1] > oldPos[1]) {
+                int rank = oldPos[0];
+                Piece rook = getPiece(new int[] { rank, 7 });
+                board[rank][7] = null;
+                board[rank][5] = rook;
+                rook.setPosition(new int[] { rank, 5 });
+            }
+            // Queenside castle
+            else {
+                int rank = oldPos[0];
+                Piece rook = getPiece(new int[] { rank, 0 });
+                board[rank][0] = null;
+                board[rank][3] = rook;
+                rook.setPosition(new int[] { rank, 3 });
+            }
         }
 
-        // Update board
-        int[] oldPos = piece.getPosition();
+        // Handle en passant capture
+        if (piece.getType() == Piece.Type.PAWN && 
+            newPos[1] != oldPos[1] && // diagonal move
+            getPiece(newPos) == null) { // no piece at target square
+            // Remove captured pawn
+            int capturedPawnRank = oldPos[0];
+            Piece capturedPawn = getPiece(new int[] { capturedPawnRank, newPos[1] });
+            if (capturedPawn != null) {
+                board[capturedPawnRank][newPos[1]] = null;
+                capturedPawn.setActive(false);
+                if (capturedPawn.getColor() == Piece.Color.WHITE) {
+                    whitePieces.remove(capturedPawn);
+                } else {
+                    blackPieces.remove(capturedPawn);
+                }
+            }
+        }
+
+        // Handle regular capture
+        Piece capturedPiece = getPiece(newPos);
+        if (capturedPiece != null) {
+            capturedPiece.setActive(false);
+            if (capturedPiece.getColor() == Piece.Color.WHITE) {
+                whitePieces.remove(capturedPiece);
+            } else {
+                blackPieces.remove(capturedPiece);
+            }
+        }
+
+        // Move piece
         board[oldPos[0]][oldPos[1]] = null;
         board[newPos[0]][newPos[1]] = piece;
         piece.setPosition(newPos);
+
+        // Update game state (castling rights, en passant target, move counters, etc.)
+        updateGameState(piece, oldPos, newPos);
     }
 
     /**
@@ -584,18 +616,53 @@ public class Board {
         if (!isValidFEN(fen)) {
             throw new IllegalArgumentException("Invalid FEN string");
         }
-        
-        Map<Character, Piece.Type> pieceMap = Map.of(
-            'p', Piece.Type.PAWN,
-            'n', Piece.Type.KNIGHT,
-            'b', Piece.Type.BISHOP,
-            'r', Piece.Type.ROOK,
-            'q', Piece.Type.QUEEN,
-            'k', Piece.Type.KING);
-       
-        Piece.Type type = pieceMap.get(c);
 
-        Piece.Color color = Character.isUpperCase(c) ? Piece.Color.WHITE : Piece.Color.BLACK;
+        String[] parts = fen.split(" ");
+        String boardString = parts[0];
+        String colorToMoveString = parts[1];
+        String castlingRightsString = parts[2];
+        String enPassantTargetString = parts[3];
+        String halfMoveClockString = parts[4];
+        String fullMoveNumberString = parts[5];
+
+        Piece.Color colorToMove = colorToMoveString.equals("w") ? Piece.Color.WHITE : Piece.Color.BLACK;
+        boolean blackKingsideCastle = castlingRightsString.contains("k");
+        boolean blackQueensideCastle = castlingRightsString.contains("q");
+        boolean whiteKingsideCastle = castlingRightsString.contains("K");
+        boolean whiteQueensideCastle = castlingRightsString.contains("Q");
+        int[] enPassantTarget = enPassantTargetString.equals("-") ? null
+                : new int[] { enPassantTargetString.charAt(0) - 'a',
+                        8 - Character.getNumericValue(enPassantTargetString.charAt(1)) };
+        int halfMoveClock = Integer.parseInt(halfMoveClockString);
+        int fullMoveNumber = Integer.parseInt(fullMoveNumberString);
+
+        Board board = new Board(colorToMove, halfMoveClock, fullMoveNumber, blackKingsideCastle, blackQueensideCastle, whiteKingsideCastle, whiteQueensideCastle, enPassantTarget);
+
+        // Parse the board string
+        String[] rows = boardString.split("/");
+        for (int i = 0; i < 8; i++) {
+            String row = rows[i];
+            int file = 0;
+            for (char c : row.toCharArray()) {
+                if (Character.isDigit(c)) {
+                    file += Character.getNumericValue(c);
+                } else {
+                    Piece.Color color = Character.isUpperCase(c) ? Piece.Color.WHITE : Piece.Color.BLACK;
+                    String cLower = String.valueOf(c).toLowerCase();
+                    switch (cLower) {    
+                        case "p" -> board.addPiece(new Pawn(color, new int[] { i, file }, board), new int[] { i, file });
+                        case "n" -> board.addPiece(new Knight(color, new int[] { i, file }, board), new int[] { i, file });
+                        case "b" -> board.addPiece(new Bishop(color, new int[] { i, file }, board), new int[] { i, file });
+                        case "r" -> board.addPiece(new Rook(color, new int[] { i, file }, board), new int[] { i, file });
+                        case "q" -> board.addPiece(new Queen(color, new int[] { i, file }, board), new int[] { i, file });
+                        case "k" -> board.addPiece(new King(color, new int[] { i, file }, board), new int[] { i, file });
+                    }
+                    file++;
+                }
+            }
+        }
+
+        return board;
 
     }
 
@@ -621,10 +688,20 @@ public class Board {
         }
 
         // Check if any opponent piece can capture the king
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                Piece piece = board[i][j];
-                if (piece != null && piece.getColor() != color) {
+        if (color == Piece.Color.WHITE) {
+            for (Piece piece: blackPieces) {
+                if (piece != null && piece.isActive() && piece.getColor() != color) {
+                    List<int[]> moves = piece.getPossibleMoves();
+                    for (int[] move : moves) {
+                        if (move[0] == kingPos[0] && move[1] == kingPos[1]) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } else {
+            for (Piece piece: whitePieces) {
+                if (piece != null && piece.isActive() && piece.getColor() != color) {
                     List<int[]> moves = piece.getPossibleMoves();
                     for (int[] move : moves) {
                         if (move[0] == kingPos[0] && move[1] == kingPos[1]) {
@@ -650,50 +727,383 @@ public class Board {
      * @return A new Board instance with the same state
      */
     public Board copy() {
-        Piece[][] newBoard = new Piece[8][8];
+        Board newBoard = new Board(this.toMove, this.halfMoveClock, this.fullMoveNumber, this.blackKingsideCastle,
+                this.blackQueensideCastle, this.whiteKingsideCastle, this.whiteQueensideCastle, this.enPassantTarget);
+
         // Copy pieces
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 Piece piece = this.board[i][j];
                 if (piece != null) {
                     // Create new piece of same type and color
-                    Piece newPiece = null;
-                    switch (piece.getType()) {
-                        case PAWN:
-                            newPiece = new Pawn(piece.getColor(), i, j, newBoard);
-                            break;
-                        case KNIGHT:
-                            newPiece = new Knight(piece.getColor(), i, j, newBoard);
-                            break;
-                        case BISHOP:
-                            newPiece = new Bishop(piece.getColor(), i, j, newBoard);
-                            break;
-                        case ROOK:
-                            newPiece = new Rook(piece.getColor(), i, j, newBoard);
-                            break;
-                        case QUEEN:
-                            newPiece = new Queen(piece.getColor(), i, j, newBoard);
-                            break;
-                        case KING:
-                            newPiece = new King(piece.getColor(), i, j, newBoard);
-                            break;
-                    }
-                    newBoard[i][j] = newPiece;
+                    Piece newPiece = switch (piece.getType()) {
+                        case PAWN -> new Pawn(piece.getColor(), new int[] {i, j}, newBoard);
+                        case KNIGHT -> new Knight(piece.getColor(), new int[] {i, j}, newBoard);
+                        case BISHOP -> new Bishop(piece.getColor(), new int[] {i, j}, newBoard);
+                        case ROOK -> new Rook(piece.getColor(), new int[] {i, j}, newBoard);
+                        case QUEEN -> new Queen(piece.getColor(), new int[] {i, j}, newBoard);
+                        case KING -> new King(piece.getColor(), new int[] {i, j}, newBoard);
+                    };
+                    newBoard.addPiece(newPiece, new int[] { i, j });
                 }
             }
         }
-        Board copyBoard = new Board(
-            newBoard,
-            this.toMove,
-            this.halfMoveClock,
-            this.fullMoveNumber,
-            this.blackKingsideCastle,
-            this.blackQueensideCastle,
-            this.whiteKingsideCastle,
-            this.whiteQueensideCastle,
-            this.enPassantTarget != null ? Arrays.copyOf(this.enPassantTarget, 2) : null
-        );
+        return newBoard;
+    }
+    
+
+    /**
+     * Gets the possible moves for all pieces of the given color.
+     * @param color the color of the pieces to get moves for
+     * @return a map of pieces to their possible moves
+     */
+    public Map<Piece, List<int[]>> getPossibleMoves(Piece.Color color) {
+        Map<Piece, List<int[]>> moves = new TreeMap<>();
+        List<Piece> pieces = color == Piece.Color.WHITE ? whitePieces : blackPieces;
+        for (Piece piece : pieces) {
+            if (piece.isActive()) {
+                List<int[]> currentMoves = piece.getPossibleMoves();
+                if (!currentMoves.isEmpty()) {
+                    moves.put(piece, currentMoves);
+                }
+            }
+        }
+        return moves;
+    }
+
+    /**
+     * Checks if the given color is in checkmate.
+     * @param color the color to check
+     * @return true if the color is in checkmate
+     */
+    public boolean isCheckmate(Piece.Color color) {
+        return isInCheck(color) && getPossibleMoves(color).isEmpty();
+    }
+
+    /**
+     * Checks if the given color is in stalemate.
+     * @param color the color to check
+     * @return true if the color is in stalemate
+     */
+    public boolean isStalemate(Piece.Color color) {
+        return !isInCheck(color) && getPossibleMoves(color).isEmpty();
+    }
+
+    public boolean is50MoveRule() {
+        return halfMoveClock >= 100;
+    }
+
+    /**
+     * Gets the color of the player to move
+     */
+    public Piece.Color getToMove() {
+        return toMove;
+    }
+
+    /**
+     * Gets the half move clock
+     */
+    public int getHalfMoveClock() {
+        return halfMoveClock;
+    }
+
+    /**
+     * Gets the full move number
+     */
+    public int getFullMoveNumber() {
+        return fullMoveNumber;
+    }
+
+    /**
+     * Updates game state after a move
+     * @param piece The piece that was moved
+     * @param oldPos The position the piece moved from
+     * @param newPos The position the piece moved to
+     */
+    public void updateGameState(Piece piece, int[] oldPos, int[] newPos) {
+        // Determine if move is a capture
+        boolean isCapture = getPiece(newPos) != null || 
+                           (piece.getType() == Piece.Type.PAWN && oldPos[1] != newPos[1]);
         
-        return copyBoard;
+        // Make the move
+        Piece capturedPiece = getPiece(newPos);
+        if (capturedPiece != null) {
+            capturedPiece.setActive(false);
+        }
+        
+        // Store old state
+        Piece.Color oppositeColor = (piece.getColor() == Piece.Color.WHITE) ? 
+                                   Piece.Color.BLACK : Piece.Color.WHITE;
+        
+        // Make temporary move to check for check/checkmate
+        Board tempBoard = this.copy();
+        tempBoard.tryMove(oldPos, newPos);
+        boolean causesCheck = tempBoard.isInCheck(oppositeColor);
+        boolean causesCheckmate = tempBoard.isCheckmate(oppositeColor);
+        
+        // Record the move
+        recordMove(piece, oldPos, newPos, isCapture, causesCheck, causesCheckmate);
+        
+        // Update move counters
+        if (piece.getType() == Piece.Type.PAWN || isCapture) {
+            halfMoveClock = 0;
+        } else {
+            halfMoveClock++;
+        }
+        
+        if (toMove == Piece.Color.BLACK) {
+            fullMoveNumber++;
+        }
+
+        // Update castling rights
+        if (piece.getType() == Piece.Type.KING) {
+            if (piece.getColor() == Piece.Color.WHITE) {
+                whiteKingsideCastle = false;
+                whiteQueensideCastle = false;
+            } else {
+                blackKingsideCastle = false;
+                blackQueensideCastle = false;
+            }
+        } else if (piece.getType() == Piece.Type.ROOK) {
+            if (oldPos[1] == 0) { // White's back rank
+                if (oldPos[0] == 0) whiteQueensideCastle = false;
+                if (oldPos[0] == 7) whiteKingsideCastle = false;
+            } else if (oldPos[1] == 7) { // Black's back rank
+                if (oldPos[0] == 0) blackQueensideCastle = false;
+                if (oldPos[0] == 7) blackKingsideCastle = false;
+            }
+        }
+
+        // Update en passant target
+        if (piece.getType() == Piece.Type.PAWN && Math.abs(newPos[1] - oldPos[1]) == 2) {
+            enPassantTarget = new int[] {(oldPos[1] + newPos[1])/2, oldPos[0]};
+        } else {
+            enPassantTarget = null;
+        }
+
+        // Switch turns
+        toMove = (toMove == Piece.Color.WHITE) ? Piece.Color.BLACK : Piece.Color.WHITE;
+        
+        // Record the position after the move
+        positionHistory.add(getCurrentPosition());
+    }
+
+    /**
+     * Checks if the game is drawn by insufficient material
+     */
+    public boolean isInsufficientMaterial() {
+        // Count active pieces
+        int whitePieceCount = 0;
+        for (Piece p : whitePieces) {
+            if (p.isActive()) {
+                whitePieceCount++;
+            }
+        }
+        
+        int blackPieceCount = 0;
+        for (Piece p : blackPieces) {
+            if (p.isActive()) {
+                blackPieceCount++;
+            }
+        }
+
+        // King vs King
+        if (whitePieceCount == 1 && blackPieceCount == 1) {
+            return true;
+        }
+
+        // King and Bishop/Knight vs King
+        if ((whitePieceCount == 2 && blackPieceCount == 1) || 
+            (whitePieceCount == 1 && blackPieceCount == 2)) {
+            for (Piece p : whitePieces) {
+                if (p.isActive() && (p.getType() == Piece.Type.BISHOP || p.getType() == Piece.Type.KNIGHT)) {
+                    return true;
+                }
+            }
+            for (Piece p : blackPieces) {
+                if (p.isActive() && (p.getType() == Piece.Type.BISHOP || p.getType() == Piece.Type.KNIGHT)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks if the game is drawn by threefold repetition
+     * Note: You'll need to track position history to implement this
+     */
+    public boolean isThreefoldRepetition() {
+        if (positionHistory.size() < 5) { // Need at least 5 moves for 3 repetitions
+            return false;
+        }
+        
+        String currentPos = positionHistory.get(positionHistory.size() - 1);
+        int repetitions = 0;
+        
+        // Count occurrences of current position in history
+        for (String pos : positionHistory) {
+            if (pos.equals(currentPos)) {
+                repetitions++;
+                if (repetitions >= 3) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Checks if the game is over
+     */
+    public boolean isGameOver() {
+        return isCheckmate(toMove) || isStalemate(toMove) || 
+               is50MoveRule() || isInsufficientMaterial() || 
+               isThreefoldRepetition();
+    }
+
+    /**
+     * Converts a position array to algebraic notation (e.g. [0,0] -> "a1")
+     */
+    private String positionToAlgebraic(int[] pos) {
+        char file = (char) ('a' + pos[1]);  // Convert column to letter
+        int rank = pos[0] + 1;              // Convert row to number
+        return "" + file + rank;
+    }
+
+    /**
+     * Adds a move to the move history in algebraic notation
+     * @param piece The piece that moved
+     * @param oldPos Starting position
+     * @param newPos Ending position
+     * @param isCapture Whether the move was a capture
+     * @param isCheck Whether the move puts opponent in check
+     * @param isCheckmate Whether the move is checkmate
+     */
+    private void recordMove(Piece piece, int[] oldPos, int[] newPos, boolean isCapture, 
+                           boolean isCheck, boolean isCheckmate) {
+        StringBuilder moveNotation = new StringBuilder();
+        
+        // Add piece letter (except for pawns)
+        if (piece.getType() != Piece.Type.PAWN) {
+            moveNotation.append(switch (piece.getType()) {
+                case KING -> "K";
+                case QUEEN -> "Q";
+                case ROOK -> "R";
+                case BISHOP -> "B";
+                case KNIGHT -> "N";
+                default -> "";
+            });
+        }
+        
+        // Handle castling
+        if (piece.getType() == Piece.Type.KING && Math.abs(newPos[1] - oldPos[1]) == 2) {
+            moveNotation = new StringBuilder(newPos[1] > oldPos[1] ? "O-O" : "O-O-O");
+        } else {
+            // Add capture notation
+            if (isCapture) {
+                if (piece.getType() == Piece.Type.PAWN) {
+                    moveNotation.append(positionToAlgebraic(oldPos).charAt(0));
+                }
+                moveNotation.append("x");
+            }
+            
+            // Add destination square
+            moveNotation.append(positionToAlgebraic(newPos));
+        }
+        
+        // Add check/checkmate notation
+        if (isCheckmate) {
+            moveNotation.append("#");
+        } else if (isCheck) {
+            moveNotation.append("+");
+        }
+        
+        moveHistory.add(moveNotation.toString());
+    }
+
+    /**
+     * Gets the move history in algebraic notation
+     * @return List of moves in algebraic notation
+     */
+    public List<String> getMoveHistory() {
+        return new ArrayList<>(moveHistory);
+    }
+
+    /**
+     * Converts the current board state to FEN notation
+     */
+    private String boardToFEN() {
+        StringBuilder fen = new StringBuilder();
+        
+        // Add piece positions
+        for (int i = 7; i >= 0; i--) {  // Start from rank 8
+            int emptyCount = 0;
+            for (int j = 0; j < 8; j++) {
+                Piece piece = board[i][j];
+                if (piece == null) {
+                    emptyCount++;
+                } else {
+                    if (emptyCount > 0) {
+                        fen.append(emptyCount);
+                        emptyCount = 0;
+                    }
+                    char pieceChar = switch (piece.getType()) {
+                        case PAWN -> 'p';
+                        case KNIGHT -> 'n';
+                        case BISHOP -> 'b';
+                        case ROOK -> 'r';
+                        case QUEEN -> 'q';
+                        case KING -> 'k';
+                    };
+                    fen.append(piece.getColor() == Piece.Color.WHITE ? 
+                        Character.toUpperCase(pieceChar) : pieceChar);
+                }
+            }
+            if (emptyCount > 0) {
+                fen.append(emptyCount);
+            }
+            if (i > 0) fen.append('/');
+        }
+        
+        // Add color to move
+        fen.append(' ').append(toMove == Piece.Color.WHITE ? 'w' : 'b');
+        
+        // Add castling rights
+        fen.append(' ');
+        if (whiteKingsideCastle) fen.append('K');
+        if (whiteQueensideCastle) fen.append('Q');
+        if (blackKingsideCastle) fen.append('k');
+        if (blackQueensideCastle) fen.append('q');
+        if (!whiteKingsideCastle && !whiteQueensideCastle && 
+            !blackKingsideCastle && !blackQueensideCastle) {
+            fen.append('-');
+        }
+        
+        // Add en passant target
+        fen.append(' ');
+        if (enPassantTarget != null) {
+            fen.append(positionToAlgebraic(enPassantTarget));
+        } else {
+            fen.append('-');
+        }
+        
+        // Add move counters
+        fen.append(' ').append(halfMoveClock);
+        fen.append(' ').append(fullMoveNumber);
+        
+        return fen.toString();
+    }
+
+    /**
+     * Gets the current position in a format suitable for repetition checking
+     * (excludes move counters which don't affect position identity)
+     */
+    private String getCurrentPosition() {
+        String fen = boardToFEN();
+        // Return everything before the move counters (last two fields)
+        return fen.substring(0, fen.lastIndexOf(' ', fen.lastIndexOf(' ') - 1));
     }
 }
