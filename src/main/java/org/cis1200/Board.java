@@ -6,7 +6,8 @@ import java.util.Arrays;
 
 import org.cis1200.util.Piece;
 import org.cis1200.util.Position;
-
+import org.cis1200.pieces.*;
+import java.util.ArrayList;
 public class Board {
     private Piece[][] board;
 
@@ -31,7 +32,7 @@ public class Board {
     private int[] enPassantTarget;
 
     /**
-     * Creates a new board.
+     * Creates a new empty board.
      */
     public Board() {
         this.board = new Piece[8][8];
@@ -47,8 +48,12 @@ public class Board {
         this.blackPieces = new Piece[16];
     }
 
-    public Board(Piece.Color toMove, int halfMoveClock, int fullMoveNumber, boolean blackKingsideCastle, boolean blackQueensideCastle, boolean whiteKingsideCastle, boolean whiteQueensideCastle, int[] enPassantTarget) {
-        this.board = new Piece[8][8];
+
+    /**
+     * Creates a new board with a custom board state.
+     */
+    public Board(Piece[][] board, Piece.Color toMove, int halfMoveClock, int fullMoveNumber, boolean blackKingsideCastle, boolean blackQueensideCastle, boolean whiteKingsideCastle, boolean whiteQueensideCastle, int[] enPassantTarget) {
+        this.board = board;
         this.toMove = toMove;
         this.halfMoveClock = halfMoveClock;
         this.fullMoveNumber = fullMoveNumber;
@@ -57,8 +62,26 @@ public class Board {
         this.whiteKingsideCastle = whiteKingsideCastle;
         this.whiteQueensideCastle = whiteQueensideCastle;
         this.enPassantTarget = enPassantTarget;
+        
+        // Initialize piece arrays
         this.whitePieces = new Piece[16];
         this.blackPieces = new Piece[16];
+        
+        // Populate piece arrays
+        int whiteIndex = 0;
+        int blackIndex = 0;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                Piece piece = board[i][j];
+                if (piece != null) {
+                    if (piece.getColor() == Piece.Color.WHITE) {
+                        whitePieces[whiteIndex++] = piece;
+                    } else {
+                        blackPieces[blackIndex++] = piece;
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -109,12 +132,32 @@ public class Board {
     /**
      * Moves a piece to a new position without validation.
      * Used internally for move validation and checking for check.
+     * @return a copy of the board with the move made
      */
-    public void tryMove(Piece piece, int[] newPos) {
-        int[] oldPos = piece.getPosition();
+    public Board tryMove(int[] oldPos, int[] newPos) {
+        Piece piece = this.board[oldPos[0]][oldPos[1]];
         board[oldPos[0]][oldPos[1]] = null;
         board[newPos[0]][newPos[1]] = piece;
         piece.setPosition(newPos);
+        return this;
+    }
+    
+    /**
+     * Given a piece and a list of moves, returns a list of moves that don't leave the king in check.
+     * @param piece the piece to check
+     * @param moves the list of moves to check
+     * @return a list of valid moves
+     */
+    public static List<int[]> filterChecklessMoves(Piece piece, List<int[]> moves) {
+        List<int[]> validMoves = new ArrayList<>();
+        for (int[] move : moves) {
+            Board copyBoard = piece.getBoard().copy();
+            copyBoard.tryMove(piece.getPosition(), move);
+            if (!copyBoard.isInCheck(piece.getColor())) {
+                validMoves.add(Arrays.copyOf(move, 2));
+            }
+        }
+        return validMoves;
     }
 
     /**
@@ -138,8 +181,7 @@ public class Board {
         int[] oldPos = piece.getPosition();
         board[oldPos[0]][oldPos[1]] = null;
         board[newPos[0]][newPos[1]] = piece;
-        piece.setX(newPos[0]);
-        piece.setY(newPos[1]);
+        piece.setPosition(newPos);
     }
 
     /**
@@ -156,6 +198,31 @@ public class Board {
             }
         }
         return false;
+    }
+
+
+    /**
+     * Gets the castling rights.
+     * @return an array of booleans representing the castling rights in the order white kingside, white queenside, black kingside, black queenside
+     */
+    public boolean[] getCastlingRights() {
+        return new boolean[] { whiteKingsideCastle, whiteQueensideCastle, blackKingsideCastle, blackQueensideCastle };
+    }
+    
+    public void setWhiteKingsideCastle(boolean whiteKingsideCastle) {
+        this.whiteKingsideCastle = whiteKingsideCastle;
+    }
+
+    public void setWhiteQueensideCastle(boolean whiteQueensideCastle) {
+        this.whiteQueensideCastle = whiteQueensideCastle;
+    }   
+
+    public void setBlackKingsideCastle(boolean blackKingsideCastle) {
+        this.blackKingsideCastle = blackKingsideCastle;
+    }
+
+    public void setBlackQueensideCastle(boolean blackQueensideCastle) {
+        this.blackQueensideCastle = blackQueensideCastle;
     }
 
     /*----------------------------------
@@ -572,46 +639,61 @@ public class Board {
     }
 
     /**
-     * Updates en passant target square after a pawn move
-     * @param piece the piece that moved
-     * @param oldPos the position the piece moved from
-     * @param newPos the position the piece moved to
-     */
-    private void updateEnPassantTarget(Piece piece, int[] oldPos, int[] newPos) {
-        // Clear old en passant target
-        enPassantTarget = null;
-        
-        // Only set new target if it was a two-square pawn move
-        if (piece.getType() == Piece.Type.PAWN) {
-            int moveDistance = Math.abs(newPos[0] - oldPos[0]);
-            if (moveDistance == 2) {
-                // Set target square to the square the pawn skipped
-                int targetRank = (oldPos[0] + newPos[0]) / 2;
-                enPassantTarget = new int[] { targetRank, newPos[1] };
-            }
-        }
-    }
-
-    /**
      * Gets the current en passant target square
      * @return the target square coordinates, or null if none exists
      */
     public int[] getEnPassantTarget() {
         return enPassantTarget != null ? Arrays.copyOf(enPassantTarget, 2) : null;
     }
-
     /**
-     * Checks if a pawn can make an en passant capture
-     * @param pawn the pawn to check
-     * @param targetSquare the square to capture to
-     * @return true if the move is a valid en passant capture
+     * Creates a deep copy of the board, including all pieces and game state.
+     * @return A new Board instance with the same state
      */
-    public boolean isEnPassantCapture(Piece pawn, int[] targetSquare) {
-        if (enPassantTarget == null || pawn.getType() != Piece.Type.PAWN) {
-            return false;
+    public Board copy() {
+        Piece[][] newBoard = new Piece[8][8];
+        // Copy pieces
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                Piece piece = this.board[i][j];
+                if (piece != null) {
+                    // Create new piece of same type and color
+                    Piece newPiece = null;
+                    switch (piece.getType()) {
+                        case PAWN:
+                            newPiece = new Pawn(piece.getColor(), i, j, newBoard);
+                            break;
+                        case KNIGHT:
+                            newPiece = new Knight(piece.getColor(), i, j, newBoard);
+                            break;
+                        case BISHOP:
+                            newPiece = new Bishop(piece.getColor(), i, j, newBoard);
+                            break;
+                        case ROOK:
+                            newPiece = new Rook(piece.getColor(), i, j, newBoard);
+                            break;
+                        case QUEEN:
+                            newPiece = new Queen(piece.getColor(), i, j, newBoard);
+                            break;
+                        case KING:
+                            newPiece = new King(piece.getColor(), i, j, newBoard);
+                            break;
+                    }
+                    newBoard[i][j] = newPiece;
+                }
+            }
         }
+        Board copyBoard = new Board(
+            newBoard,
+            this.toMove,
+            this.halfMoveClock,
+            this.fullMoveNumber,
+            this.blackKingsideCastle,
+            this.blackQueensideCastle,
+            this.whiteKingsideCastle,
+            this.whiteQueensideCastle,
+            this.enPassantTarget != null ? Arrays.copyOf(this.enPassantTarget, 2) : null
+        );
         
-        return targetSquare[0] == enPassantTarget[0] && 
-               targetSquare[1] == enPassantTarget[1];
+        return copyBoard;
     }
 }

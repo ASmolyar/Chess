@@ -20,26 +20,20 @@ public abstract class Piece {
         WHITE, BLACK
     }
     
-    private Type type;  
-    private Color color;
+    private final Type type;  
+    private final Color color;
     private boolean active;
     private int x;
     private int y;
-    private int[][] moveDirections;
-    private Board board;
+    private final Board board;
 
-    public Piece(Type type, Color color, int x, int y, Board board) {
+    public Piece(Type type, Color color, int[] position, Board board) {
         this.type = type;
         this.color = color;
         this.active = true;
-        this.x = x;
-        this.y = y;
+        this.x = position[0];
+        this.y = position[1];
         this.board = board;
-    }
-
-    public Piece(Type type, Color color, int[] position, Board board)
-    {
-        this(type, color, position[0], position[1], board);
     }
 
     //getters

@@ -1,15 +1,13 @@
 package org.cis1200.pieces;
 
-import org.cis1200.Board;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Arrays;
+import java.util.List;
+
+import org.cis1200.Board;
 import org.cis1200.util.Piece;
 
 public class Bishop extends Piece {
-    public Bishop(Color color, int x, int y, Board board) {
-        super(Type.BISHOP, color, x, y, board);
-    }
 
     public Bishop(Color color, int[] position, Board board) {
         super(Type.BISHOP, color, position, board);
@@ -25,9 +23,8 @@ public class Bishop extends Piece {
     @Override
     public List<int[]> getPossibleMoves() {
 
-        //initialize return list
         List<int[]> range = new ArrayList<>();
-
+        
         //iterate through all possible move directions
         for (int[] direction : moveDirections) {
             
@@ -37,56 +34,32 @@ public class Bishop extends Piece {
             //iterate through all possible moves in the current direction
             while (true) {
                 int[] newPos = new int[] {
-                        currentPos[0] + direction[0],
-                        currentPos[1] + direction[1]
+                    currentPos[0] + direction[0],
+                    currentPos[1] + direction[1]
                 };
-                currentPos = newPos;
 
                 //check if the new position is out of bounds
-                if (currentPos[0] < 0 || currentPos[0] > 7 || currentPos[1] < 0 || currentPos[1] > 7) {
+                if (newPos[0] < 0 || newPos[0] > 7 || newPos[1] < 0 || newPos[1] > 7) {
                     break;
                 }
 
-                //check if there is a piece at the current position
-                Piece atCurrentPos = this.getBoard().getPiece(currentPos);
-                if (atCurrentPos != null) {
-                    //check if the piece is the same color
-                    if (atCurrentPos.getColor() == this.getColor()) {
+                //check if there is a piece at the new position
+                Piece atNewPos = this.getBoard().getPiece(newPos);
+                if (atNewPos != null) {
+                    if (atNewPos.getColor() == this.getColor()) {
                         break;
                     } else {
-                        // Capture move - check if it leaves own king in check
-                        int[] originalPos = this.getPosition();
-                        Piece capturedPiece = this.getBoard().getPiece(currentPos);
-                        
-                        // Try move
-                        this.getBoard().movePiece(this, currentPos);
-                        
-                        if (!this.getBoard().isInCheck(this.getColor())) {
-                            range.add(Arrays.copyOf(currentPos, 2));
-                        }
-                        
-                        // Undo move
-                        this.getBoard().movePiece(this, originalPos);
-                        this.getBoard().setPiece(capturedPiece, currentPos);
+                        range.add(Arrays.copyOf(newPos, 2));
                         break;
                     }
                 }
-                
-                // Regular move - check if it leaves own king in check
-                int[] originalPos = this.getPosition();
-                
-                // Try move
-                this.getBoard().movePiece(this, currentPos);
-                
-                if (!this.getBoard().isInCheck(this.getColor())) {
-                    range.add(Arrays.copyOf(currentPos, 2));
-                }
-                
-                // Undo move
-                this.getBoard().movePiece(this, originalPos);
+                range.add(Arrays.copyOf(newPos, 2));
+                currentPos = newPos;
             }
         }
 
+        //check which moves don't leave king in check
+        range = Board.filterChecklessMoves(this, range);
         return range;
     }
 }
