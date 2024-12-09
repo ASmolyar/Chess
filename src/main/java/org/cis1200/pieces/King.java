@@ -18,6 +18,10 @@ public class King extends Piece {
 
     @Override
     public List<int[]> getLegalMoves() {
+        // If it's not this piece's turn, return empty list
+        if (this.getColor() != this.getBoard().getToMove()) {
+            return new ArrayList<>();
+        }
 
         List<int[]> range = new ArrayList<>();
 

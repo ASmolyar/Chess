@@ -2,9 +2,9 @@ package org.cis1200;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.cis1200.pieces.Bishop;
 import org.cis1200.pieces.King;
@@ -223,6 +223,32 @@ public class Board {
         board[oldPos[0]][oldPos[1]] = null;
         board[newPos[0]][newPos[1]] = piece;
         piece.setPosition(newPos);
+
+        // Handle pawn promotion
+        if (piece.getType() == Piece.Type.PAWN) {
+            // White pawn reaches 8th rank or black pawn reaches 1st rank
+            if ((piece.getColor() == Piece.Color.WHITE && newPos[1] == 7) ||
+                (piece.getColor() == Piece.Color.BLACK && newPos[1] == 0)) {
+                
+                // Create new queen
+                Queen queen = new Queen(piece.getColor(), newPos, this);
+                
+                // Deactivate pawn first
+                piece.setActive(false);
+                
+                // Remove pawn from piece list and add queen
+                if (piece.getColor() == Piece.Color.WHITE) {
+                    whitePieces.remove(piece);
+                    whitePieces.add(queen);
+                } else {
+                    blackPieces.remove(piece);
+                    blackPieces.add(queen);
+                }
+                
+                // Replace pawn with queen on board
+                board[newPos[0]][newPos[1]] = queen;
+            }
+        }
 
         // Update game state (castling rights, en passant target, move counters, etc.)
         updateGameState(piece, oldPos, newPos);
@@ -825,7 +851,7 @@ public class Board {
      * @return a map of pieces to their possible moves
      */
     public Map<Piece, List<int[]>> getLegalMoves(Piece.Color color) {
-        Map<Piece, List<int[]>> moves = new TreeMap<>();
+        Map<Piece, List<int[]>> moves = new HashMap<>();
         List<Piece> pieces = color == Piece.Color.WHITE ? whitePieces : blackPieces;
         for (Piece piece : pieces) {
             if (piece.isActive()) {

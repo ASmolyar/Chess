@@ -3,10 +3,14 @@ package org.cis1200;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -21,7 +25,21 @@ public class ChessBoard extends JPanel {
 
     // Game constants
     public static final int BOARD_SIZE = 8;
-    public static final int SQUARE_SIZE = 60;
+    public static final int SQUARE_SIZE = 80;
+
+    // Add image fields
+    private final Image blackBishop;
+    private final Image blackKing;
+    private final Image blackKnight;
+    private final Image blackPawn;
+    private final Image blackQueen;
+    private final Image blackRook;
+    private final Image whiteBishop;
+    private final Image whiteKing;
+    private final Image whiteKnight;
+    private final Image whitePawn;
+    private final Image whiteQueen;
+    private final Image whiteRook;
 
     /**
      * Initializes the game board.
@@ -36,6 +54,36 @@ public class ChessBoard extends JPanel {
         // Initialize model and status
         this.gameBoard = Board.starterBoard();
         this.status = statusInit;
+
+        // Load images
+        try {
+            blackBishop = ImageIO.read(getClass().getResource("/black_bishop.png"))
+                    .getScaledInstance(SQUARE_SIZE, SQUARE_SIZE, Image.SCALE_SMOOTH);
+            blackKing = ImageIO.read(getClass().getResource("/black_king.png"))
+                    .getScaledInstance(SQUARE_SIZE, SQUARE_SIZE, Image.SCALE_SMOOTH);
+            blackKnight = ImageIO.read(getClass().getResource("/black_knight.png"))
+                    .getScaledInstance(SQUARE_SIZE, SQUARE_SIZE, Image.SCALE_SMOOTH);
+            blackPawn = ImageIO.read(getClass().getResource("/black_pawn.png"))
+                    .getScaledInstance(SQUARE_SIZE, SQUARE_SIZE, Image.SCALE_SMOOTH);
+            blackQueen = ImageIO.read(getClass().getResource("/black_queen.png"))
+                    .getScaledInstance(SQUARE_SIZE, SQUARE_SIZE, Image.SCALE_SMOOTH);
+            blackRook = ImageIO.read(getClass().getResource("/black_rook.png"))
+                    .getScaledInstance(SQUARE_SIZE, SQUARE_SIZE, Image.SCALE_SMOOTH);
+            whiteBishop = ImageIO.read(getClass().getResource("/white_bishop.png"))
+                    .getScaledInstance(SQUARE_SIZE, SQUARE_SIZE, Image.SCALE_SMOOTH);
+            whiteKing = ImageIO.read(getClass().getResource("/white_king.png"))
+                    .getScaledInstance(SQUARE_SIZE, SQUARE_SIZE, Image.SCALE_SMOOTH);
+            whiteKnight = ImageIO.read(getClass().getResource("/white_knight.png"))
+                    .getScaledInstance(SQUARE_SIZE, SQUARE_SIZE, Image.SCALE_SMOOTH);
+            whitePawn = ImageIO.read(getClass().getResource("/white_pawn.png"))
+                    .getScaledInstance(SQUARE_SIZE, SQUARE_SIZE, Image.SCALE_SMOOTH);
+            whiteQueen = ImageIO.read(getClass().getResource("/white_queen.png"))
+                    .getScaledInstance(SQUARE_SIZE, SQUARE_SIZE, Image.SCALE_SMOOTH);
+            whiteRook = ImageIO.read(getClass().getResource("/white_rook.png"))
+                    .getScaledInstance(SQUARE_SIZE, SQUARE_SIZE, Image.SCALE_SMOOTH);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not load piece images", e);
+        }
 
         // Create squares array and initialize board
         squares = new JPanel[BOARD_SIZE][BOARD_SIZE];
@@ -200,5 +248,46 @@ public class ChessBoard extends JPanel {
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(BOARD_SIZE * SQUARE_SIZE, BOARD_SIZE * SQUARE_SIZE);
+    }
+
+    @Override
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        
+        // Draw board
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                if ((i + j) % 2 == 0) {
+                    g.setColor(new Color(0xf0, 0xf1, 0xf0)); // White squares #f0f1f0
+                } else {
+                    g.setColor(new Color(0x84, 0x77, 0xba)); // Black squares #8477ba
+                }
+                g.fillRect(j * SQUARE_SIZE, (BOARD_SIZE - 1 - i) * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
+            }
+        }
+        
+        // Draw pieces
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                Piece piece = gameBoard.getPiece(new int[]{j, i});
+                if (piece != null) {
+                    Image img = getPieceImage(piece);
+                    g.drawImage(img, j * SQUARE_SIZE, (BOARD_SIZE - 1 - i) * SQUARE_SIZE, this);
+                }
+            }
+        }
+        
+        // ... rest of painting code (selected piece highlights, etc)
+    }
+    
+    private Image getPieceImage(Piece piece) {
+        return switch (piece.getType()) {
+            case PAWN -> piece.getColor() == Piece.Color.WHITE ? whitePawn : blackPawn;
+            case KNIGHT -> piece.getColor() == Piece.Color.WHITE ? whiteKnight : blackKnight;
+            case BISHOP -> piece.getColor() == Piece.Color.WHITE ? whiteBishop : blackBishop;
+            case ROOK -> piece.getColor() == Piece.Color.WHITE ? whiteRook : blackRook;
+            case QUEEN -> piece.getColor() == Piece.Color.WHITE ? whiteQueen : blackQueen;
+            case KING -> piece.getColor() == Piece.Color.WHITE ? whiteKing : blackKing;
+        };
     }
 }

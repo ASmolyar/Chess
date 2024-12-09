@@ -61,6 +61,11 @@ public class Rook extends Piece {
 
     @Override
     public List<int[]> getLegalMoves() {
+        // If it's not this piece's turn, return empty list
+        if (this.getColor() != this.getBoard().getToMove()) {
+            return new ArrayList<>();
+        }
+
         List<int[]> moves = getSimpleMoves();
         return Board.filterChecklessMoves(this, moves);
     }
